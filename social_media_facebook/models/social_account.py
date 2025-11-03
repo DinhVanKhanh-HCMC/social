@@ -2856,3 +2856,53 @@ class SocialAccount(models.Model):
             print(
                 f"    → Created social.post.account ID: {new_post_account.id} (linked to post ID: {post.id})"
             )
+
+    # Facebook Insights: Impressions and Engagements
+    def get_facebook_impressions_engagements(self, page_id, access_token):
+        endpoint = f"{page_id}/insights"
+        params = {
+            "metric": "page_impressions,page_post_engagements",
+            "period": "days_28",
+            "access_token": access_token,
+        }
+        response = self._request_facebook(method="GET", endpoint=endpoint, params=params)
+        return response
+
+    def parse_facebook_impressions_engagements(self, data):
+        metrics = {}
+        for item in data.get("data", []):
+            name = item.get("name")
+            if item.get("values"):
+                value = item["values"][-1].get("value")
+                metrics[name] = value
+        return metrics
+    
+    def update_facebook_impressions_engagements(self):
+        for record in self:
+            data = record.get_facebook_impressions_engagements(
+                record.page_id,
+                record.page_access_token
+            )
+            metrics = record.parse_facebook_impressions_engagements(data)
+
+            impression_count = metrics.get("page_impressions", 0)
+            interactions_count = metrics.get("page_post_engagements", 0)
+            engagement_rate = 0.0
+
+            if impression_count > 0:
+                engagement_rate = round(
+                    (interactions_count / impression_count) * 100, 2
+                )
+
+            record.write({
+                "impression_count": impression_count,
+                "interactions_count": interactions_count,
+                "engagement": engagement_rate,
+            })
+    
+    def read(self, fields=None, load='_classic_read'):
+        records = super().read(fields, load)
+        for record in self:
+            if record.media_type == 'facebook':
+                record.update_facebook_impressions_engagements()
+        return records
