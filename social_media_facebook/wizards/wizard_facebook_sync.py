@@ -1,8 +1,12 @@
+# Copyright 2025 Kencove (https://www.kencove.com/)
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
 from datetime import datetime, timedelta
 
 from odoo import _, api, fields, models
+
+import logging
+_logger = logging.getLogger(__name__)
 
 
 class WizardFacebookSync(models.TransientModel):
@@ -123,8 +127,8 @@ class WizardFacebookSync(models.TransientModel):
 
         except Exception as e:
             import traceback
-            print(f"ERROR in sync wizard: {str(e)}")
-            print(traceback.format_exc())
+            _logger.error(f"ERROR in sync wizard: {str(e)}")
+            _logger.info(traceback.format_exc())
 
             # Show error notification
             return {

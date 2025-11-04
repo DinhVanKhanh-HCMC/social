@@ -1,7 +1,10 @@
+# Copyright 2025 Kencove (https://www.kencove.com/)
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
 from odoo import fields, models
 
+import logging
+_logger = logging.getLogger(__name__)
 
 class WizardFetchPages(models.TransientModel):
     _name = "wizard.fetch.pages"
@@ -17,13 +20,13 @@ class WizardFetchPages(models.TransientModel):
 
     def action_create_accounts(self):
         """Create social.account records for selected pages"""
-        print("=" * 80)
-        print("Wizard: Creating accounts for selected pages...")
-        print(f"Wizard ID: {self.id}")
-        print(f"Total pages in wizard: {len(self.page_ids)}")
+        _logger.info("=" * 80)
+        _logger.info("Wizard: Creating accounts for selected pages...")
+        _logger.info(f"Wizard ID: {self.id}")
+        _logger.info(f"Total pages in wizard: {len(self.page_ids)}")
 
         selected_pages = self.page_ids.filtered(lambda p: p.selected)
-        print(f"Selected pages count: {len(selected_pages)}")
+        _logger.info(f"Selected pages count: {len(selected_pages)}")
 
         created_account_ids = []
 
@@ -36,7 +39,7 @@ class WizardFetchPages(models.TransientModel):
                     "name": line.page_name,
                     "access_token": line.page_access_token,
                 })
-                print(f"  - Will create account for: {line.page_name} (ID: {line.page_id})")
+                _logger.info(f"  - Will create account for: {line.page_name} (ID: {line.page_id})")
 
             # Get app credentials from wizard.social.account if available
             wizard_social_account = self.env["wizard.social.account"].search(
@@ -45,7 +48,7 @@ class WizardFetchPages(models.TransientModel):
 
             # Save app credentials to system settings for reuse
             if wizard_social_account and wizard_social_account.facebook_app_id:
-                print(f"Saving App ID and Secret to system settings for reuse...")
+                _logger.info(f"Saving App ID and Secret to system settings for reuse...")
                 self.env["ir.config_parameter"].sudo().set_param(
                     "social_media_base.facebook_app_id",
                     wizard_social_account.facebook_app_id
@@ -55,7 +58,7 @@ class WizardFetchPages(models.TransientModel):
                         "social_media_base.facebook_app_secret",
                         wizard_social_account.facebook_app_secret
                     )
-                print("App credentials saved to settings")
+                _logger.info("App credentials saved to settings")
 
             # Create accounts using the data we already have
             created_account_ids = self.env["social.account"].create_account_facebook_from_wizard(
@@ -63,12 +66,12 @@ class WizardFetchPages(models.TransientModel):
                 self.user_access_token,
                 wizard_social_account
             )
-            print("Account creation completed", created_account_ids)
+            _logger.info("Account creation completed", created_account_ids)
         else:
-            print("WARNING: No pages selected!")
+            _logger.warning("WARNING: No pages selected!")
 
-        print("Redirecting to Facebook accounts list...")
-        print("=" * 80)
+        _logger.info("Redirecting to Facebook accounts list...")
+        _logger.info("=" * 80)
 
         # Redirect to the list of Facebook accounts with newly created ones highlighted
         return {

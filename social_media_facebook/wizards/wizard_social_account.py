@@ -1,3 +1,4 @@
+# Copyright 2025 Kencove (https://www.kencove.com/)
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
 from werkzeug.urls import url_encode, url_join
@@ -5,6 +6,9 @@ from werkzeug.urls import url_encode, url_join
 from odoo import _, fields, models
 
 from ..social_facebook_utils import _SCOPE_FACEBOOK_ALL, _URL_AUTH_FACEBOOK
+
+import logging
+_logger = logging.getLogger(__name__)
 
 
 class WizardSocialAccount(models.TransientModel):
@@ -33,19 +37,19 @@ class WizardSocialAccount(models.TransientModel):
         result = super()._action_add_account()
         context = dict(self.env.context)
         if self.media_type == "facebook":
-            print("=" * 80)
-            print("Wizard: Starting Facebook OAuth flow...")
-            print(f"Wizard ID: {self.id}")
+            _logger.info("=" * 80)
+            _logger.info("Wizard: Starting Facebook OAuth flow...")
+            _logger.info(f"Wizard ID: {self.id}")
 
             # Use wizard fields (like LinkedIn and X do)
             app_id = self.facebook_app_id
             app_secret = self.facebook_app_secret
 
-            print(f"App ID: {app_id}")
-            print(f"App Secret configured: {bool(app_secret)}")
+            _logger.info(f"App ID: {app_id}")
+            _logger.info(f"App Secret configured: {bool(app_secret)}")
 
             redirect_url = self._get_url_redirect()
-            print(f"OAuth redirect URL: {redirect_url}")
+            _logger.info(f"OAuth redirect URL: {redirect_url}")
 
             params = {
                 "client_id": app_id,
@@ -54,8 +58,8 @@ class WizardSocialAccount(models.TransientModel):
                 "response_type": "code",
             }
             url_auth = f"{_URL_AUTH_FACEBOOK}?{url_encode(params)}"
-            print(f"Facebook OAuth URL: {url_auth[:100]}...")
-            print("=" * 80)
+            _logger.info(f"Facebook OAuth URL: {url_auth[:100]}...")
+            _logger.info("=" * 80)
 
             if not context.get("only_url", False):
                 return {
