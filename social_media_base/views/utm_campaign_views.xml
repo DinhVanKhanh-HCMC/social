@@ -10,12 +10,16 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='name']" position="after">
                 <field name="allow_media_ids" invisible="True" />
-                <field name="campaign_group_id" required="1" />
-                <field name="media_id" required="1" />
+                <field name="campaign_group_id" />
+                <field
+                    name="media_id"
+                    placeholder="Optional: Select platform for platform-specific campaigns"
+                />
                 <field
                     name="account_id"
-                    required="1"
+                    placeholder="Optional: Select account for platform-specific campaigns"
                     options="{'no_create_edit': True, 'no_create': True}"
+                    invisible="not media_id"
                 />
             </xpath>
         </field>

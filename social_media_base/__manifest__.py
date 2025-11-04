@@ -18,6 +18,8 @@
         "views/social_account_views.xml",
         "views/social_post_views.xml",
         "views/social_post_account_views.xml",
+        "views/social_comment_views.xml",
+        "views/social_lead_views.xml",
         "views/utm_group_campaign_views.xml",
         "views/utm_campaign_views.xml",
         "views/social_action_client_views.xml",

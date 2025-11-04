@@ -1,11 +1,12 @@
 /** @odoo-module **/
 
-import {Component} from "@odoo/owl";
+import {Component, useState, useRef} from "@odoo/owl";
 import {ConfirmationDialog} from "@web/core/confirmation_dialog/confirmation_dialog";
 import {Dropdown} from "@web/core/dropdown/dropdown";
 import {DropdownItem} from "@web/core/dropdown/dropdown_item";
 import {_t} from "@web/core/l10n/translation";
 import {useService} from "@web/core/utils/hooks";
+import {useEmojiPicker} from "@web/core/emoji_picker/emoji_picker";
 
 export class SocialComment extends Component {
     static template = "social_media_base.SocialComment";
@@ -30,6 +31,28 @@ export class SocialComment extends Component {
         this.notificationService = useService("notification");
         this.effectService = useService("effect");
         this.dialog = useService("dialog");
+
+        // Initialize state for reply input and nested replies toggle
+        this.state = useState({
+            showReplyInput: false,
+            replyMessage: "",
+            showReplies: false,  // Collapse replies by default
+        });
+
+        // Emoji picker for reply
+        this.replyEmojiButtonRef = useRef("replyEmojiButton");
+        this.emojiPicker = useEmojiPicker(this.replyEmojiButtonRef, {
+            onSelect: (emoji) => {
+                this.state.replyMessage += emoji;
+            },
+        });
+    }
+
+    /**
+     * Toggle showing/hiding nested replies
+     */
+    toggleReplies() {
+        this.state.showReplies = !this.state.showReplies;
     }
 
     /**
@@ -48,10 +71,10 @@ export class SocialComment extends Component {
 
     async onDeleteComment() {
         this.dialog.add(ConfirmationDialog, {
-            title: _t("Delete comment"),
-            body: _t("Are you sure you want to delete this comment?"),
+            title: _t("Hide comment"),
+            body: _t("Are you sure you want to hide this comment?"),
             confirm: () => this.deleteComment(),
-            confirmLabel: _t("Delete"),
+            confirmLabel: _t("Hide"),
             cancel: () => {
                 // Cancel
             },
@@ -68,7 +91,7 @@ export class SocialComment extends Component {
     async deleteComment() {
         const result = await this._onDeleteComment();
         const message =
-            result.message === undefined ? _t("Comment deleted") : result.message;
+            result.message === undefined ? _t("Comment hidden") : result.message;
         const type_notif = result.success === true ? "success" : "danger";
         this.notificationService.add(message, {
             type: type_notif,
@@ -124,18 +147,58 @@ export class SocialComment extends Component {
      * `true` if the comment was replied successfully, and a `message` property
      * set to the message to display to the user.
      *
+     * @param {String} message - The reply message
      * @returns {Object}
      */
-    _onReplyComment() {
+    async _onReplyComment(message) {
         return {};
     }
 
     /**
-     * Replies to a comment.
+     * Shows the reply input field.
      *
-     * This method triggers a bus event to reload the comments.
+     * This method toggles the visibility of the reply input textarea.
+     * Also clears any existing reply message to ensure fresh start.
      */
     onReplyComment() {
-        this.env.bus.trigger("SOCIAL:RELOAD_COMMENTS");
+        this.state.showReplyInput = true;
+        this.state.replyMessage = "";  // Clear any previous message
+    }
+
+    /**
+     * Sends a reply to the comment.
+     *
+     * This method validates the reply message, calls the backend API,
+     * and notifies the user of the result. It also triggers a bus event
+     * to reload the comments.
+     */
+    async sendReply() {
+        if (!this.state.replyMessage || !this.state.replyMessage.trim()) {
+            return;
+        }
+
+        const result = await this._onReplyComment(this.state.replyMessage);
+
+        if (result.success) {
+            this.notificationService.add(
+                result.message || _t("Reply sent successfully"),
+                {type: "success"}
+            );
+            // Clear message but keep reply input open for adding more replies
+            this.state.replyMessage = "";
+            // Delay reload slightly to allow user to see success message and add more replies
+            setTimeout(() => {
+                this.env.bus.trigger("SOCIAL:RELOAD_COMMENTS");
+                // Trigger reload of the kanban view to update comment count
+                this.env.bus.trigger("SOCIAL:RELOAD_ORGANIZATION", {
+                    reload: true,
+                });
+            }, 1000);  // 1 second delay
+        } else {
+            this.notificationService.add(
+                result.message || _t("Failed to send reply"),
+                {type: "danger", sticky: true}
+            );
+        }
     }
 }
