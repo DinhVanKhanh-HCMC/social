@@ -63,6 +63,8 @@ class SocialAccount(models.Model):
     ads_count = fields.Integer(
         string="Ads Count", compute="_compute_facebook_content_counts"
     )
+    
+    last_insight_update = fields.Datetime(string="Last Facebook Insights Update")
 
     def _get_facebook_app_id(self):
         """Get Facebook App ID from settings or fallback to per-account field"""
@@ -2904,9 +2906,13 @@ class SocialAccount(models.Model):
                 "engagement": engagement_rate,
             })
     
-    def read(self, fields=None, load='_classic_read'):
-        records = super().read(fields, load)
-        for record in self:
-            if record.media_type == 'facebook':
-                record.update_facebook_impressions_engagements()
-        return records
+    def cron_update_facebook_insights(self):
+        """
+            Scheduled job to update Facebook 
+            page insights (impressions and engagement).
+        """
+        _logger.info("=== [CRON] Running Facebook Insights update ===")
+        facebook_accounts = self.search([('media_type', '=', 'facebook')])
+        for account in facebook_accounts:
+            account.update_facebook_impressions_engagements()
+            account.last_insight_update = fields.Datetime.now()

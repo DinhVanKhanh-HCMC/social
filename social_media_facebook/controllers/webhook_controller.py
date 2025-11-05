@@ -126,7 +126,7 @@ class FacebookWebhookController(http.Controller):
 
         # Get app secret from system parameters
         app_secret = request.env["ir.config_parameter"].sudo().get_param(
-            "social_media_facebook.app_secret"
+            "social_media_base.facebook_app_secret"
         )
 
         if not app_secret:
