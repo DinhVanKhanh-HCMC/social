@@ -127,8 +127,8 @@ class WizardFacebookSync(models.TransientModel):
 
         except Exception as e:
             import traceback
-            _logger.error(f"ERROR in sync wizard: {str(e)}")
-            _logger.info(traceback.format_exc())
+            _logger.error(f"Error in sync wizard: {str(e)}")
+            _logger.debug(traceback.format_exc())
 
             # Show error notification
             return {

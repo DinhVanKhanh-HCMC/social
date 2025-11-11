@@ -190,18 +190,18 @@ class SocialAccount(models.Model):
         if not self.fb_ad_account_id:
             raise UserError(_("No ad account configured for this Facebook page."))
 
-        _logger.info("=" * 80)
-        _logger.info("FACEBOOK API DIAGNOSTIC")
-        _logger.info("=" * 80)
-        _logger.info(f"Account: {self.page_name}")
-        _logger.info(f"Page ID: {self.page_id}")
-        _logger.info(f"Ad Account: {self.fb_ad_account_id}")
-        _logger.info(f"Environment: {self.enviroment or 'test'}")
-        _logger.info("")
+        _logger.debug("=" * 80)
+        _logger.debug("FACEBOOK API DIAGNOSTIC")
+        _logger.debug("=" * 80)
+        _logger.debug(f"Account: {self.page_name}")
+        _logger.debug(f"Page ID: {self.page_id}")
+        _logger.debug(f"Ad Account: {self.fb_ad_account_id}")
+        _logger.debug(f"Environment: {self.enviroment or 'test'}")
+        _logger.debug("")
 
         # Test 1: Ad Account Info
-        _logger.info("TEST 1: Ad Account Info")
-        _logger.info("-" * 80)
+        _logger.debug("TEST 1: Ad Account Info")
+        _logger.debug("-" * 80)
         try:
             endpoint = self.fb_ad_account_id
             params = {
@@ -210,23 +210,23 @@ class SocialAccount(models.Model):
             }
             response = self._request_facebook(endpoint=endpoint, params=params)
             if isinstance(response, dict):
-                _logger.info(f"✓ Ad Account accessible")
-                _logger.info(f"  Name: {response.get('name', 'N/A')}")
-                _logger.info(f"  Status: {response.get('account_status', 'N/A')}")
-                _logger.info(f"  Currency: {response.get('currency', 'N/A')}")
-                _logger.info(f"  Age: {response.get('age', 'N/A')} hours")
+                _logger.debug(f"✓ Ad Account accessible")
+                _logger.debug(f"  Name: {response.get('name', 'N/A')}")
+                _logger.debug(f"  Status: {response.get('account_status', 'N/A')}")
+                _logger.debug(f"  Currency: {response.get('currency', 'N/A')}")
+                _logger.debug(f"  Age: {response.get('age', 'N/A')} hours")
                 if response.get('disable_reason'):
-                    _logger.warning(f"  ⚠️  DISABLED: {response.get('disable_reason')}")
+                    _logger.warning(f"{response.get('disable_reason')}")
             else:
-                _logger.info(f"✗ Failed to access ad account")
-                _logger.info(f"  Response: {response}")
+                _logger.debug(f"✗ Failed to access ad account")
+                _logger.debug(f"  Response: {response}")
         except Exception as e:
             _logger.error(f"✗ Error: {str(e)}")
-        _logger.info("")
+        _logger.debug("")
 
         # Test 2: Campaigns
-        _logger.info("TEST 2: Campaigns")
-        _logger.info("-" * 80)
+        _logger.debug("TEST 2: Campaigns")
+        _logger.debug("-" * 80)
         try:
             endpoint = f"{self.fb_ad_account_id}/campaigns"
             params = {
@@ -237,20 +237,20 @@ class SocialAccount(models.Model):
             response = self._request_facebook(endpoint=endpoint, params=params)
             if isinstance(response, dict):
                 campaigns = response.get("data", [])
-                _logger.info(f"✓ Found {len(campaigns)} campaign(s)")
+                _logger.debug(f"✓ Found {len(campaigns)} campaign(s)")
                 for camp in campaigns:
-                    _logger.info(f"  - {camp.get('name')} (Status: {camp.get('status')})")
+                    _logger.debug(f"  - {camp.get('name')} (Status: {camp.get('status')})")
                 if len(campaigns) == 0:
-                    _logger.warning("  ℹ️  No campaigns found - create a campaign in Ads Manager")
+                    _logger.warning("No campaigns found - create a campaign in Ads Manager")
             else:
-                _logger.info(f"✗ Failed to fetch campaigns: {response}")
+                _logger.error(f"Failed to fetch campaigns: {response}")
         except Exception as e:
-            _logger.error(f"✗ Error: {str(e)}")
-        _logger.info("")
+            _logger.error(f"{str(e)}")
+        _logger.debug("")
 
         # Test 3: AdSets
-        _logger.info("TEST 3: AdSets")
-        _logger.info("-" * 80)
+        _logger.debug("TEST 3: AdSets")
+        _logger.debug("-" * 80)
         try:
             endpoint = f"{self.fb_ad_account_id}/adsets"
             params = {
@@ -261,20 +261,20 @@ class SocialAccount(models.Model):
             response = self._request_facebook(endpoint=endpoint, params=params)
             if isinstance(response, dict):
                 adsets = response.get("data", [])
-                _logger.info(f"✓ Found {len(adsets)} adset(s)")
+                _logger.debug(f"Found {len(adsets)} adset(s)")
                 for adset in adsets:
-                    _logger.info(f"  - {adset.get('name')} (Status: {adset.get('status')})")
+                    _logger.debug(f"  - {adset.get('name')} (Status: {adset.get('status')})")
                 if len(adsets) == 0:
-                    _logger.warning("  ℹ️  No adsets found")
+                    _logger.warning("No adsets found")
             else:
-                _logger.info(f"✗ Failed to fetch adsets: {response}")
+                _logger.error(f"Failed to fetch adsets: {response}")
         except Exception as e:
-            _logger.error(f"✗ Error: {str(e)}")
-        _logger.info("")
+            _logger.error(f"{str(e)}")
+        _logger.debug("")
 
         # Test 4: Ads (all statuses)
-        _logger.info("TEST 4: Ads (all statuses)")
-        _logger.info("-" * 80)
+        _logger.debug("TEST 4: Ads (all statuses)")
+        _logger.debug("-" * 80)
         try:
             endpoint = f"{self.fb_ad_account_id}/ads"
             params = {
@@ -285,20 +285,20 @@ class SocialAccount(models.Model):
             response = self._request_facebook(endpoint=endpoint, params=params)
             if isinstance(response, dict):
                 ads = response.get("data", [])
-                _logger.info(f"✓ Found {len(ads)} ad(s)")
+                _logger.debug(f"Found {len(ads)} ad(s)")
                 for ad in ads[:5]:  # Show first 5
-                    _logger.info(f"  - {ad.get('name')} (Status: {ad.get('status')}, Effective: {ad.get('effective_status')})")
+                    _logger.debug(f"  - {ad.get('name')} (Status: {ad.get('status')}, Effective: {ad.get('effective_status')})")
                 if len(ads) == 0:
-                    _logger.warning("  ℹ️  No ads found (draft ads NOT included)")
+                    _logger.warning("No ads found (draft ads NOT included)")
             else:
-                _logger.info(f"✗ Failed to fetch ads: {response}")
+                _logger.error(f"✗ Failed to fetch ads: {response}")
         except Exception as e:
             _logger.error(f"✗ Error: {str(e)}")
-        _logger.info("")
+        _logger.debug("")
 
         # Test 5: AdCreatives
-        _logger.info("TEST 5: AdCreatives")
-        _logger.info("-" * 80)
+        _logger.debug("TEST 5: AdCreatives")
+        _logger.debug("-" * 80)
         try:
             endpoint = f"{self.fb_ad_account_id}/adcreatives"
             params = {
@@ -309,21 +309,21 @@ class SocialAccount(models.Model):
             response = self._request_facebook(endpoint=endpoint, params=params)
             if isinstance(response, dict):
                 creatives = response.get("data", [])
-                _logger.info(f"✓ Found {len(creatives)} creative(s)")
+                _logger.debug(f"✓ Found {len(creatives)} creative(s)")
                 for creative in creatives[:5]:  # Show first 5
                     name = creative.get('name') or creative.get('title') or creative.get('id')
                     _logger.info(f"  - {name}")
                 if len(creatives) == 0:
-                    _logger.warning("  ℹ️  No ad creatives found")
+                    _logger.warning("No ad creatives found")
             else:
                 _logger.warning(f"✗ Failed to fetch creatives: {response}")
         except Exception as e:
-            _logger.error(f"✗ Error: {str(e)}")
+            _logger.error(f"{str(e)}")
         _logger.info("")
 
         # Test 6: Token Permissions
-        _logger.info("TEST 6: Token Permissions (via debug_token)")
-        _logger.info("-" * 80)
+        _logger.debug("TEST 6: Token Permissions (via debug_token)")
+        _logger.debug("-" * 80)
         try:
             endpoint = "debug_token"
             params = {
@@ -333,40 +333,40 @@ class SocialAccount(models.Model):
             response = self._request_facebook(endpoint=endpoint, params=params)
             if isinstance(response, dict) and "data" in response:
                 token_data = response.get("data", {})
-                _logger.info(f"✓ Token Type: {token_data.get('type', 'Unknown')}")
-                _logger.info(f"  Valid: {token_data.get('is_valid', False)}")
-                _logger.info(f"  App: {token_data.get('application', 'Unknown')}")
+                _logger.debug(f"✓ Token Type: {token_data.get('type', 'Unknown')}")
+                _logger.debug(f"  Valid: {token_data.get('is_valid', False)}")
+                _logger.debug(f"  App: {token_data.get('application', 'Unknown')}")
 
                 # Check scopes/permissions
                 scopes = token_data.get("scopes", [])
                 if scopes:
-                    _logger.info(f"\n  Token has {len(scopes)} permission(s):")
+                    _logger.debug(f"\n  Token has {len(scopes)} permission(s):")
                     for perm in sorted(scopes):
-                        _logger.info(f"    ✓ {perm}")
+                        _logger.debug(f"    ✓ {perm}")
 
                     # Check for required permissions
                     required = ['ads_management', 'ads_read', 'pages_read_engagement', 'pages_manage_posts']
                     missing = [p for p in required if p not in scopes]
                     if missing:
-                        _logger.info("")
-                        _logger.warning(f"  ⚠️  Missing recommended permissions:")
+                        _logger.debug("")
+                        _logger.warning(f"Missing recommended permissions:")
                         for perm in missing:
-                            _logger.info(f"    ✗ {perm}")
+                            _logger.debug(f"    ✗ {perm}")
                     else:
-                        _logger.info("")
-                        _logger.info(f"  ✅ All required permissions present!")
+                        _logger.debug("")
+                        _logger.debug(f"All required permissions present!")
                 else:
-                    _logger.warning("  ⚠️  No scopes information available (may be normal for page tokens)")
+                    _logger.warning("No scopes information available (may be normal for page tokens)")
             else:
-                _logger.warning(f"  ℹ️  Note: Page tokens don't expose permissions via /me/permissions")
-                _logger.warning(f"  ℹ️  But all previous tests passed, so token has required permissions!")
+                _logger.warning(f"Note: Page tokens don't expose permissions via /me/permissions")
+                _logger.warning(f"But all previous tests passed, so token has required permissions!")
         except Exception as e:
-            _logger.warning(f"  ℹ️  Note: Cannot check permissions for page tokens via API")
-            _logger.warning(f"  ℹ️  But all previous tests passed, so token is working correctly!")
+            _logger.warning(f"Note: Cannot check permissions for page tokens via API")
+            _logger.warning(f"But all previous tests passed, so token is working correctly!")
 
-        _logger.info("=" * 80)
-        _logger.info("DIAGNOSTIC COMPLETE")
-        _logger.info("=" * 80)
+        _logger.debug("=" * 80)
+        _logger.debug("DIAGNOSTIC COMPLETE")
+        _logger.debug("=" * 80)
 
         return {
             'type': 'ir.actions.client',
@@ -464,11 +464,11 @@ class SocialAccount(models.Model):
         self, authorization_code, redirect_endpoint_uri, app_id, app_secret
     ):
         """Get access token from Facebook OAuth"""
-        _logger.info("Getting Facebook access token...")
-        _logger.info(f"App ID: {app_id}")
+        _logger.debug("Getting Facebook access token...")
+        _logger.debug(f"App ID: {app_id}")
 
         redirect_url = url_join(self.get_base_url(), redirect_endpoint_uri)
-        _logger.info(f"Redirect URL: {redirect_url}")
+        _logger.debug(f"Redirect URL: {redirect_url}")
 
         params = {
             "client_id": app_id,
@@ -476,62 +476,62 @@ class SocialAccount(models.Model):
             "redirect_uri": redirect_url,
             "code": authorization_code,
         }
-        _logger.info("Calling Facebook API: oauth/access_token")
+        _logger.debug("Calling Facebook API: oauth/access_token")
         response = self._request_facebook(endpoint="oauth/access_token", params=params)
-        _logger.info(f"Facebook token API response status: {response.status_code if hasattr(response, 'status_code') else 'success'}")
+        _logger.debug(f"Facebook token API response status: {response.status_code if hasattr(response, 'status_code') else 'success'}")
         return response
 
     def get_pages_facebook(self, user_access_token):
-        _logger.info("Fetching Facebook pages from API...")
+        _logger.debug("Fetching Facebook pages from API...")
         params = {
             "access_token": user_access_token,
         }
-        _logger.info("Calling Facebook API: me/accounts")
+        _logger.debug("Calling Facebook API: me/accounts")
         response = self._request_facebook(endpoint="me/accounts", params=params)
-        _logger.info(f"Facebook pages API response type: {type(response)}")
+        _logger.debug(f"Facebook pages API response type: {type(response)}")
 
         if isinstance(response, dict) and response.get("data"):
             pages = response.get("data", [])
-            _logger.info(f"Successfully retrieved {len(pages)} pages")
+            _logger.debug(f"Successfully retrieved {len(pages)} pages")
             for page in pages:
-                _logger.info(f"  - Page: {page.get('name')} (ID: {page.get('id')})")
+                _logger.debug(f"  - Page: {page.get('name')} (ID: {page.get('id')})")
             return pages
         else:
-            _logger.warning(f"WARNING: No pages data in response or error occurred: {response}")
+            _logger.warning(f"No pages data in response or error occurred: {response}")
         return []
 
     def create_account_facebook(self, selected_page_ids, token):
         """Create Facebook accounts for selected pages only"""
-        _logger.info("=" * 80)
-        _logger.info("Creating Facebook accounts...")
-        _logger.info(f"Selected page IDs: {selected_page_ids}")
+        _logger.debug("=" * 80)
+        _logger.debug("Creating Facebook accounts...")
+        _logger.debug(f"Selected page IDs: {selected_page_ids}")
 
         if isinstance(token, dict):
             user_access_token = token.get("access_token", False)
             if user_access_token:
-                _logger.info(f"User access token: {user_access_token[:20]}...")
+                _logger.debug(f"User access token: {user_access_token[:20]}...")
                 pages = self.get_pages_facebook(user_access_token)
                 # Calculate token expiration (Facebook page tokens don't expire)
                 token_expires = datetime.now() + timedelta(days=365 * 10)
-                _logger.info(f"Token expiration set to: {token_expires}")
+                _logger.debug(f"Token expiration set to: {token_expires}")
 
                 created_count = 0
                 updated_count = 0
                 skipped_count = 0
 
                 for page in pages:
-                    _logger.info("-" * 40)
+                    _logger.debug("-" * 40)
                     page_id = page.get("id", "")
                     page_name = page.get("name", "")
-                    _logger.info(f"Processing page: {page_name} (ID: {page_id})")
+                    _logger.debug(f"Processing page: {page_name} (ID: {page_id})")
 
                     # Only create accounts for selected pages
                     if page_id not in selected_page_ids:
-                        _logger.info("  Skipped: Not in selected pages")
+                        _logger.debug("  Skipped: Not in selected pages")
                         skipped_count += 1
                         continue
 
-                    _logger.info("  Checking for existing account...")
+                    _logger.debug("  Checking for existing account...")
                     existing_account = self.search(
                         [
                             ("page_id", "=", page_id),
@@ -568,22 +568,22 @@ class SocialAccount(models.Model):
                         })
 
                     if not existing_account:
-                        _logger.info("  Creating new account...")
+                        _logger.debug("  Creating new account...")
                         new_account = self.create(values_data)
-                        _logger.info(f"  ✓ Created account ID: {new_account.id}")
+                        _logger.debug(f"  ✓ Created account ID: {new_account.id}")
                         created_count += 1
                     else:
-                        _logger.info(f"  Updating existing account ID: {existing_account.id}")
+                        _logger.debug(f"  Updating existing account ID: {existing_account.id}")
                         existing_account.write(values_data)
-                        _logger.info("  ✓ Updated account")
+                        _logger.debug("  ✓ Updated account")
                         updated_count += 1
 
-                _logger.info("=" * 80)
-                _logger.info("Account creation summary:")
-                _logger.info(f"  Created: {created_count}")
-                _logger.info(f"  Updated: {updated_count}")
-                _logger.info(f"  Skipped: {skipped_count}")
-                _logger.info("=" * 80)
+                _logger.debug("=" * 80)
+                _logger.debug("Account creation summary:")
+                _logger.debug(f"  Created: {created_count}")
+                _logger.debug(f"  Updated: {updated_count}")
+                _logger.debug(f"  Skipped: {skipped_count}")
+                _logger.debug("=" * 80)
         else:
             message_error = f"Creating account: {token}"
             raise ValidationError(message_error)
@@ -599,9 +599,9 @@ class SocialAccount(models.Model):
         Returns:
             list: IDs of created/updated accounts
         """
-        _logger.info("=" * 80)
-        _logger.info("Creating Facebook accounts from wizard data...")
-        _logger.info(f"Pages to create: {len(pages_data)}")
+        _logger.debug("=" * 80)
+        _logger.debug("Creating Facebook accounts from wizard data...")
+        _logger.debug(f"Pages to create: {len(pages_data)}")
 
         # Calculate token expiration (Facebook page tokens don't expire)
         token_expires = datetime.now() + timedelta(days=365 * 10)
@@ -611,13 +611,13 @@ class SocialAccount(models.Model):
         account_ids = []
 
         for page in pages_data:
-            _logger.info("-" * 40)
+            _logger.debug("-" * 40)
             page_id = page.get("id", "")
             page_name = page.get("name", "")
-            _logger.info(f"Processing page: {page_name} (ID: {page_id})")
+            _logger.debug(f"Processing page: {page_name} (ID: {page_id})")
 
             # Check for existing account
-            _logger.info("  Checking for existing account...")
+            _logger.debug("  Checking for existing account...")
             existing_account = self.search(
                 [
                     ("page_id", "=", page_id),
@@ -642,11 +642,11 @@ class SocialAccount(models.Model):
             }
 
             # Download and store Facebook page profile picture
-            _logger.info("  Downloading page profile picture...")
+            _logger.debug("  Downloading page profile picture...")
             page_picture = self._download_facebook_page_picture(page_id, page.get("access_token", ""))
             if page_picture:
                 values_data["image_1920"] = page_picture
-                _logger.info("  ✓ Page profile picture downloaded")
+                _logger.debug("  ✓ Page profile picture downloaded")
 
             # Store app credentials if from wizard
             if wizard_social_account:
@@ -654,31 +654,31 @@ class SocialAccount(models.Model):
                     "facebook_app_id": wizard_social_account.facebook_app_id,
                     "facebook_app_secret": wizard_social_account.facebook_app_secret,
                 })
-                _logger.info("  Storing app credentials from wizard")
+                _logger.debug("  Storing app credentials from wizard")
 
             if not existing_account:
-                _logger.info("  Creating new account...")
+                _logger.debug("  Creating new account...")
                 new_account = self.create(values_data)
-                _logger.info(f"  ✓ Created account ID: {new_account.id}")
+                _logger.debug(f"  ✓ Created account ID: {new_account.id}")
                 account_ids.append(new_account.id)
                 created_count += 1
             else:
-                _logger.info(f"  Updating existing account ID: {existing_account.id}")
+                _logger.debug(f"  Updating existing account ID: {existing_account.id}")
                 existing_account.write(values_data)
-                _logger.info("  ✓ Updated account")
+                _logger.debug("  ✓ Updated account")
                 account_ids.append(existing_account.id)
                 updated_count += 1
 
         # Delete the wizard_social_account after successful account creation
         if wizard_social_account:
-            _logger.info("Deleting wizard.social.account after successful creation")
+            _logger.debug("Deleting wizard.social.account after successful creation")
             wizard_social_account.unlink()
 
-        _logger.info("=" * 80)
-        _logger.info("Account creation summary:")
-        _logger.info(f"  Created: {created_count}")
-        _logger.info(f"  Updated: {updated_count}")
-        _logger.info("=" * 80)
+        _logger.debug("=" * 80)
+        _logger.debug("Account creation summary:")
+        _logger.debug(f"  Created: {created_count}")
+        _logger.debug(f"  Updated: {updated_count}")
+        _logger.debug("=" * 80)
 
         return account_ids
 
@@ -723,7 +723,7 @@ class SocialAccount(models.Model):
                 "Please re-authenticate by updating the account."
             ))
 
-        _logger.info(f"Refreshing token for Facebook account: {self.name}")
+        _logger.debug(f"Refreshing token for Facebook account: {self.name}")
 
         try:
             # Step 1: Exchange short-lived token for long-lived token
@@ -741,7 +741,7 @@ class SocialAccount(models.Model):
 
             if isinstance(response, dict) and response.get("access_token"):
                 new_user_token = response.get("access_token")
-                _logger.info("Successfully obtained new user access token")
+                _logger.debug("Successfully obtained new user access token")
 
                 # Step 2: Get fresh page access token using new user token
                 pages = self.get_pages_facebook(new_user_token)
@@ -765,7 +765,7 @@ class SocialAccount(models.Model):
                         "status": "active",
                     })
 
-                    _logger.info(f"Token refreshed successfully for: {self.name}")
+                    _logger.debug(f"Token refreshed successfully for: {self.name}")
 
                     return {
                         "type": "ir.actions.client",
@@ -790,7 +790,7 @@ class SocialAccount(models.Model):
                 ) % response)
 
         except Exception as e:
-            _logger.error(f"ERROR: Error refreshing token: {str(e)}")
+            _logger.error(f"Error refreshing token: {str(e)}")
             return {
                 "type": "ir.actions.client",
                 "tag": "display_notification",
@@ -811,7 +811,7 @@ class SocialAccount(models.Model):
 
             # Handle multiple images (requires multi-step process)
             if image_ids and len(image_ids) > 1:
-                _logger.info(f"Publishing multi-photo post with {len(image_ids)} images")
+                _logger.debug(f"Publishing multi-photo post with {len(image_ids)} images")
 
                 # Step 1: Upload all photos and collect their IDs
                 import io
@@ -838,11 +838,11 @@ class SocialAccount(models.Model):
                             result = photo_response.json()
                             if result.get("id"):
                                 photo_ids.append(result["id"])
-                                _logger.info(f"Uploaded photo ID: {result['id']}")
+                                _logger.debug(f"Uploaded photo ID: {result['id']}")
                         else:
-                            _logger.error(f"ERROR: Failed to upload photo, status: {photo_response.status_code}")
+                            _logger.error(f"Failed to upload photo, status: {photo_response.status_code}")
                     except Exception as e:
-                        _logger.error(f"ERROR: Error uploading photo: {str(e)}")
+                        _logger.error(f"Error uploading photo: {str(e)}")
                         continue
 
                 # Step 2: Create post with all photo IDs
@@ -862,12 +862,12 @@ class SocialAccount(models.Model):
                     )
 
                     if isinstance(response, dict) and response.get("id"):
-                        _logger.info(f"Multi-photo post created: {response['id']}")
+                        _logger.debug(f"Multi-photo post created: {response['id']}")
                         return response.get("id")
 
             # Handle single image
             elif image_ids and len(image_ids) == 1:
-                _logger.info("Publishing single photo post")
+                _logger.debug("Publishing single photo post")
                 endpoint = f"{self.page_id}/photos"
 
                 try:
@@ -890,19 +890,19 @@ class SocialAccount(models.Model):
                     if response.status_code == 200:
                         result = response.json()
                         if result.get("post_id"):
-                            _logger.info(f"Single photo post created: {result['post_id']}")
+                            _logger.debug(f"Single photo post created: {result['post_id']}")
                             return result.get("post_id")
                         elif result.get("id"):
-                            _logger.info(f"Photo uploaded: {result['id']}")
+                            _logger.debug(f"Photo uploaded: {result['id']}")
                             return result.get("id")
                     else:
-                        _logger.error(f"ERROR: Error publishing photo, status: {response.status_code}, response: {response.text}")
+                        _logger.error(f"Error publishing photo, status: {response.status_code}, response: {response.text}")
                 except Exception as e:
-                    _logger.error(f"ERROR: Error publishing photo: {str(e)}")
+                    _logger.error(f"Error publishing photo: {str(e)}")
 
             # Handle video
             elif video_ids and len(video_ids) > 0:
-                _logger.info("Publishing video post")
+                _logger.debug("Publishing video post")
                 endpoint = f"{self.page_id}/videos"
                 params = base_params.copy()
                 params["description"] = message
@@ -921,14 +921,14 @@ class SocialAccount(models.Model):
                     )
 
                     if isinstance(response, dict) and response.get("id"):
-                        _logger.info(f"Video post created: {response['id']}")
+                        _logger.debug(f"Video post created: {response['id']}")
                         return response.get("id")
                 except Exception as e:
-                    _logger.error(f"ERROR: Error publishing video: {str(e)}")
+                    _logger.error(f"Error publishing video: {str(e)}")
 
             # Handle link post
             elif link:
-                _logger.info("Publishing link post")
+                _logger.debug("Publishing link post")
                 endpoint = f"{self.page_id}/feed"
                 params = base_params.copy()
                 params["message"] = message
@@ -941,12 +941,12 @@ class SocialAccount(models.Model):
                 )
 
                 if isinstance(response, dict) and response.get("id"):
-                    _logger.info(f"Link post created: {response['id']}")
+                    _logger.debug(f"Link post created: {response['id']}")
                     return response.get("id")
 
             # Handle text-only post
             else:
-                _logger.info("Publishing text-only post")
+                _logger.debug("Publishing text-only post")
                 endpoint = f"{self.page_id}/feed"
                 params = base_params.copy()
                 params["message"] = message
@@ -958,7 +958,7 @@ class SocialAccount(models.Model):
                 )
 
                 if isinstance(response, dict) and response.get("id"):
-                    _logger.info(f"Text post created: {response['id']}")
+                    _logger.debug(f"Text post created: {response['id']}")
                     return response.get("id")
 
         return False
@@ -992,8 +992,8 @@ class SocialAccount(models.Model):
         if self.media_type != "facebook":
             return
 
-        _logger.info("=" * 80)
-        _logger.debug(f"===== DEBUG: action_sync_facebook_content - Manual sync started for account: {self.name}")
+        _logger.debug("=" * 80)
+        _logger.debug(f"=====action_sync_facebook_content - Manual sync started for account: {self.name}")
 
         try:
             # Track counts before sync
@@ -1011,9 +1011,9 @@ class SocialAccount(models.Model):
             posts_after = self.posts_count
             new_posts = posts_after - posts_before
 
-            _logger.info("Manual sync completed successfully")
-            _logger.info(f"New posts synced: {new_posts}")
-            _logger.info("=" * 80)
+            _logger.debug("Manual sync completed successfully")
+            _logger.debug(f"New posts synced: {new_posts}")
+            _logger.debug("=" * 80)
 
             # Redirect to Dashboard with success message
             return {
@@ -1035,7 +1035,7 @@ class SocialAccount(models.Model):
                 },
             }
         except Exception as e:
-            _logger.error(f"ERROR: Error during manual sync: {str(e)}")
+            _logger.error(f"Error during manual sync: {str(e)}")
             return {
                 "type": "ir.actions.client",
                 "tag": "display_notification",
@@ -1134,7 +1134,7 @@ class SocialAccount(models.Model):
 
             if isinstance(response, dict) and response.get("data"):
                 comments_data = response.get("data", [])
-                _logger.info(f"Retrieved {len(comments_data)} comments for post {fb_post_id}")
+                _logger.debug(f"Retrieved {len(comments_data)} comments for post {fb_post_id}")
 
                 for comment_data in comments_data:
                     self._process_comment_data(comment_data, post.id)
@@ -1163,7 +1163,7 @@ class SocialAccount(models.Model):
                 }
 
         except Exception as e:
-            _logger.error(f"ERROR: Failed to sync comments for post_account {post_account_id}: {str(e)}")
+            _logger.error(f"Failed to sync comments for post_account {post_account_id}: {str(e)}")
             return {
                 "success": False,
                 "message": f"Error syncing comments: {str(e)}",
@@ -1223,21 +1223,21 @@ class SocialAccount(models.Model):
 
         # Check if ad account is configured
         if not self.fb_ad_account_id:
-            _logger.info(f"No ad account configured for page: {self.page_name}. Skipping ad sync.")
+            _logger.debug(f"No ad account configured for page: {self.page_name}. Skipping ad sync.")
             self.last_ads_sync_at = fields.Datetime.now()
             return
 
         if not self.page_access_token:
-            _logger.warning(f"WARNING: No access token for account {self.name}")
+            _logger.warning(f"No access token for account {self.name}")
             return
 
         # Log environment and status for diagnostics
         env_mode = self.enviroment or "test"
         account_status = self.status or "active"
-        _logger.info(f"Syncing ads for: {self.page_name}")
-        _logger.info(f"  Ad Account: {self.fb_ad_account_id}")
-        _logger.info(f"  Environment: {env_mode.upper()}")
-        _logger.info(f"  Account Status: {account_status.upper()}")
+        _logger.debug(f"Syncing ads for: {self.page_name}")
+        _logger.debug(f"  Ad Account: {self.fb_ad_account_id}")
+        _logger.debug(f"  Environment: {env_mode.upper()}")
+        _logger.debug(f"  Account Status: {account_status.upper()}")
 
         # Fetch ads from Marketing API
         # Note: Draft ads are NOT returned by /ads endpoint - only published ads
@@ -1256,7 +1256,7 @@ class SocialAccount(models.Model):
         # Apply date filtering for all modes
         if from_datetime:
             # Manual sync with explicit from_datetime
-            _logger.info(f"  Manual sync from {from_datetime}")
+            _logger.debug(f"  Manual sync from {from_datetime}")
             params["filtering"] = json.dumps([{
                 "field": "updated_time",
                 "operator": "GREATER_THAN",
@@ -1264,7 +1264,7 @@ class SocialAccount(models.Model):
             }])
         elif self.last_ads_sync_at:
             # Incremental sync - fetch only ads updated since last sync
-            _logger.info(f"  Incremental sync from {self.last_ads_sync_at}")
+            _logger.debug(f"  Incremental sync from {self.last_ads_sync_at}")
             params["filtering"] = json.dumps([{
                 "field": "updated_time",
                 "operator": "GREATER_THAN",
@@ -1274,7 +1274,7 @@ class SocialAccount(models.Model):
             # First sync - fetch last 30 days to avoid too much data
             from datetime import datetime, timedelta
             last_30_days = datetime.now() - timedelta(days=30)
-            _logger.info(f"  First sync - fetching ads from last 30 days")
+            _logger.debug(f"  First sync - fetching ads from last 30 days")
             params["filtering"] = json.dumps([{
                 "field": "updated_time",
                 "operator": "GREATER_THAN",
@@ -1282,10 +1282,10 @@ class SocialAccount(models.Model):
             }])
 
         endpoint = f"{self.fb_ad_account_id}/ads"
-        _logger.info("Endpoint:", endpoint)
-        _logger.info("Params:", {k: v for k, v in params.items() if k != "access_token"})
+        _logger.debug("Endpoint:", endpoint)
+        _logger.debug("Params:", {k: v for k, v in params.items() if k != "access_token"})
         response = self._request_facebook(endpoint=endpoint, params=params)
-        _logger.info(f"Facebook ads API response type: {type(response)}")
+        _logger.debug(f"Facebook ads API response type: {type(response)}")
 
         # Better error handling - check if response is a Response object with error
         if hasattr(response, 'status_code'):
@@ -1295,20 +1295,20 @@ class SocialAccount(models.Model):
             self.last_ads_sync_at = fields.Datetime.now()
             return
 
-        _logger.info(f"Facebook ads API response content: {response}")
+        _logger.debug(f"Facebook ads API response content: {response}")
 
         if isinstance(response, dict):
             ads_data = response.get("data", [])
-            _logger.info(f"Retrieved {len(ads_data)} ads from Facebook")
+            _logger.debug(f"Retrieved {len(ads_data)} ads from Facebook")
 
             # If empty, try alternative endpoint for ad creatives
             if len(ads_data) == 0:
-                _logger.info("=" * 80)
-                _logger.info("DIAGNOSTIC: No ads found via /ads endpoint")
-                _logger.info("IMPORTANT: Draft ads are NOT returned by Facebook's /ads endpoint!")
-                _logger.info("")
-                _logger.info("Trying alternative: /adcreatives endpoint...")
-                _logger.info("=" * 80)
+                _logger.debug("=" * 80)
+                _logger.debug("DIAGNOSTIC: No ads found via /ads endpoint")
+                _logger.debug("IMPORTANT: Draft ads are NOT returned by Facebook's /ads endpoint!")
+                _logger.debug("")
+                _logger.debug("Trying alternative: /adcreatives endpoint...")
+                _logger.debug("=" * 80)
 
                 # Try adcreatives endpoint as fallback (may include drafts)
                 creative_endpoint = f"{self.fb_ad_account_id}/adcreatives"
@@ -1321,15 +1321,15 @@ class SocialAccount(models.Model):
                 creative_response = self._request_facebook(endpoint=creative_endpoint, params=creative_params)
 
                 if hasattr(creative_response, 'status_code'):
-                    _logger.error(f"ERROR: AdCreatives API returned status {creative_response.status_code}")
+                    _logger.error(f"AdCreatives API returned status {creative_response.status_code}")
                     if hasattr(creative_response, 'text'):
                         _logger.error(f"Error details: {creative_response.text}")
                 elif isinstance(creative_response, dict):
                     creatives_data = creative_response.get("data", [])
-                    _logger.info(f"Retrieved {len(creatives_data)} ad creatives from Facebook")
+                    _logger.debug(f"Retrieved {len(creatives_data)} ad creatives from Facebook")
 
                     if len(creatives_data) > 0:
-                        _logger.info("Processing ad creatives as draft ads...")
+                        _logger.debug("Processing ad creatives as draft ads...")
                         # Process creatives as ads
                         created_count = 0
                         for creative in creatives_data:
@@ -1378,37 +1378,37 @@ class SocialAccount(models.Model):
                                         "ad_name": creative_name,
                                     })
                                     created_count += 1
-                                    _logger.info(f"  ✓ Created social.post ID: {post.id} from creative {creative_id}")
+                                    _logger.debug(f"  ✓ Created social.post ID: {post.id} from creative {creative_id}")
 
-                        _logger.info(f"Ad creatives sync completed: {created_count} created from creatives")
+                        _logger.debug(f"Ad creatives sync completed: {created_count} created from creatives")
                         self.last_ads_sync_at = fields.Datetime.now()
                         return
 
                 # If still no data, show diagnostic
-                _logger.info("=" * 80)
-                _logger.info("DIAGNOSTIC: No ads or ad creatives found")
-                _logger.info("")
-                _logger.info("Common causes:")
-                _logger.info("  1. All ads are in DRAFT status (not visible via /ads API)")
-                _logger.info("  2. No ads or creatives exist in this ad account")
-                _logger.info("  3. Ads are archived or deleted")
-                _logger.info("  4. Token missing 'ads_read' permission")
-                _logger.info(f"  5. Ad account ({self.fb_ad_account_id}) not accessible")
-                _logger.info("")
-                _logger.info("WORKAROUNDS (without payment):")
-                _logger.info("  1. Use Graph API Explorer to manually check:")
-                _logger.info(f"     GET /{self.fb_ad_account_id}/adcreatives?fields=id,name,title")
-                _logger.info("  2. Create test ads in 'Campaign Budget Optimization' mode")
-                _logger.info("  3. Use Facebook's test ad accounts (if available)")
-                _logger.info("")
-                _logger.info(f"Environment: {env_mode.upper()} mode")
-                _logger.info("=" * 80)
+                _logger.debug("=" * 80)
+                _logger.debug("DIAGNOSTIC: No ads or ad creatives found")
+                _logger.debug("")
+                _logger.debug("Common causes:")
+                _logger.debug("  1. All ads are in DRAFT status (not visible via /ads API)")
+                _logger.debug("  2. No ads or creatives exist in this ad account")
+                _logger.debug("  3. Ads are archived or deleted")
+                _logger.debug("  4. Token missing 'ads_read' permission")
+                _logger.debug(f"  5. Ad account ({self.fb_ad_account_id}) not accessible")
+                _logger.debug("")
+                _logger.debug("WORKAROUNDS (without payment):")
+                _logger.debug("  1. Use Graph API Explorer to manually check:")
+                _logger.debug(f"     GET /{self.fb_ad_account_id}/adcreatives?fields=id,name,title")
+                _logger.debug("  2. Create test ads in 'Campaign Budget Optimization' mode")
+                _logger.debug("  3. Use Facebook's test ad accounts (if available)")
+                _logger.debug("")
+                _logger.debug(f"Environment: {env_mode.upper()} mode")
+                _logger.debug("=" * 80)
                 self.last_ads_sync_at = fields.Datetime.now()
                 return
 
         if isinstance(response, dict) and response.get("data"):
             ads_data = response.get("data", [])
-            _logger.info(f"Processing {len(ads_data)} ads...")
+            _logger.debug(f"Processing {len(ads_data)} ads...")
 
             created_count = 0
             updated_count = 0
@@ -1431,15 +1431,15 @@ class SocialAccount(models.Model):
                     insights_response = self._request_facebook(
                         endpoint=insights_endpoint, params=insights_params
                     )
-                    _logger.info(f"Insights response for ad {fb_ad_id}: {insights_response}")
+                    _logger.debug(f"Insights response for ad {fb_ad_id}: {insights_response}")
 
                     # Extract insights data (use empty dict if not available)
                     insights_data = {}
                     if isinstance(insights_response, dict) and insights_response.get("data"):
                         insights_data = insights_response.get("data", [{}])[0]
-                        _logger.info(f"  ✓ Got insights for ad {fb_ad_id}")
+                        _logger.debug(f"  ✓ Got insights for ad {fb_ad_id}")
                     else:
-                        _logger.warning(f"  ℹ️  No insights available for ad {fb_ad_id} (may be in review/pending)")
+                        _logger.warning(f"No insights available for ad {fb_ad_id} (may be in review/pending)")
                         # Continue anyway - we'll create the ad without metrics
 
                     # Parse actions for leads and conversions
@@ -1520,21 +1520,21 @@ class SocialAccount(models.Model):
                         if video_data.get("image_url"):
                             media_urls.append(video_data["image_url"])
 
-                    _logger.info(f"\n=== AD SYNC DEBUG ===")
-                    _logger.info(f"Ad ID: {fb_ad_id}")
-                    _logger.info(f"Ad Name: '{ad_data.get('name', '')}'")
-                    _logger.info(f"Creative Name: '{creative_name}'")
-                    _logger.info(f"Creative Title: '{creative_title}'")
-                    _logger.info(f"Creative Body: '{creative_body}'")
-                    _logger.info(f"Story Message (from object_story_spec): '{story_message}'")
-                    _logger.info(f"Story Description: '{story_description}'")
-                    _logger.info(f"Final Ad Name: '{ad_name}'")
-                    _logger.info(f"Final Message: '{message}'")
-                    _logger.info(f"Effective Story ID: {effective_story_id}")
-                    _logger.info(f"Permalink URL: {permalink_url}")
-                    _logger.info(f"Media URLs: {media_urls}")
-                    _logger.info(f"Video ID: {video_id}")
-                    _logger.info(f"=====================\n")
+                    _logger.debug(f"\n=== AD SYNC DEBUG ===")
+                    _logger.debug(f"Ad ID: {fb_ad_id}")
+                    _logger.debug(f"Ad Name: '{ad_data.get('name', '')}'")
+                    _logger.debug(f"Creative Name: '{creative_name}'")
+                    _logger.debug(f"Creative Title: '{creative_title}'")
+                    _logger.debug(f"Creative Body: '{creative_body}'")
+                    _logger.debug(f"Story Message (from object_story_spec): '{story_message}'")
+                    _logger.debug(f"Story Description: '{story_description}'")
+                    _logger.debug(f"Final Ad Name: '{ad_name}'")
+                    _logger.debug(f"Final Message: '{message}'")
+                    _logger.debug(f"Effective Story ID: {effective_story_id}")
+                    _logger.debug(f"Permalink URL: {permalink_url}")
+                    _logger.debug(f"Media URLs: {media_urls}")
+                    _logger.debug(f"Video ID: {video_id}")
+                    _logger.debug(f"=====================\n")
 
                     metrics_data = {
                         "message": message,
@@ -1577,7 +1577,7 @@ class SocialAccount(models.Model):
                             "state": metrics_data.get("state"),
                         })
                         updated_count += 1
-                        _logger.info(f"  ✓ Updated social.post ID: {existing_post.id} (FB Ad: {fb_ad_id})")
+                        _logger.debug(f"  ✓ Updated social.post ID: {existing_post.id} (FB Ad: {fb_ad_id})")
 
                         # Download and attach media if not already attached
                         if media_urls and not existing_post.image_ids:
@@ -1595,7 +1595,7 @@ class SocialAccount(models.Model):
                             "state": metrics_data.get("state"),
                         })
                         created_count += 1
-                        _logger.info(f"  ✓ Created social.post ID: {post.id} (FB Ad: {fb_ad_id})")
+                        _logger.debug(f"  ✓ Created social.post ID: {post.id} (FB Ad: {fb_ad_id})")
 
                         # Download and attach media to the post
                         if media_urls:
@@ -1605,17 +1605,17 @@ class SocialAccount(models.Model):
                         self._ensure_post_account_exists(post, metrics_data, ad_data)
 
                 except Exception as e:
-                    _logger.error(f"ERROR: Error processing ad {ad_data.get('id')}: {str(e)}")
+                    _logger.error(f"Error processing ad {ad_data.get('id')}: {str(e)}")
                     continue
 
-            _logger.info(f"Ads sync completed: {created_count} created, {updated_count} updated")
+            _logger.debug(f"Ads sync completed: {created_count} created, {updated_count} updated")
 
             # Automatically sync lead forms after syncing ads
             # This ensures forms are available for webhook lead processing
-            _logger.info("\nAuto-syncing lead forms (required for lead gen ads)...")
+            _logger.debug("\nAuto-syncing lead forms (required for lead gen ads)...")
             self._sync_facebook_lead_forms()
         else:
-            _logger.warning(f"WARNING: No ads data in response: {response}")
+            _logger.warning(f"No ads data in response: {response}")
 
         self.last_ads_sync_at = fields.Datetime.now()
 
@@ -1634,10 +1634,10 @@ class SocialAccount(models.Model):
         self.ensure_one()
 
         if not self.page_id or not self.page_access_token:
-            _logger.warning(f"WARNING: No page_id or access token for account {self.name}")
+            _logger.warning(f"No page_id or access token for account {self.name}")
             return 0
 
-        _logger.info(f"\n--- SYNCING LEAD FORMS FOR PAGE: {self.page_name} ---")
+        _logger.debug(f"\n--- SYNCING LEAD FORMS FOR PAGE: {self.page_name} ---")
 
         # Fetch all lead forms for this page
         endpoint = f"{self.page_id}/leadgen_forms"
@@ -1650,14 +1650,14 @@ class SocialAccount(models.Model):
         response = self._request_facebook(endpoint=endpoint, params=params)
 
         if not isinstance(response, dict):
-            _logger.error(f"ERROR: Invalid response from Facebook API: {response}")
+            _logger.error(f"Invalid response from Facebook API: {response}")
             return 0
 
         forms_data = response.get("data", [])
-        _logger.info(f"Retrieved {len(forms_data)} lead forms from Facebook")
+        _logger.debug(f"Retrieved {len(forms_data)} lead forms from Facebook")
 
         if not forms_data:
-            _logger.info("No lead forms found for this page")
+            _logger.debug("No lead forms found for this page")
             return 0
 
         created_count = 0
@@ -1668,7 +1668,7 @@ class SocialAccount(models.Model):
                 form_id = form_data.get("id")
                 form_name = form_data.get("name", "Unnamed Form")
 
-                _logger.info(f"Processing form: {form_name} (ID: {form_id})")
+                _logger.debug(f"Processing form: {form_name} (ID: {form_id})")
 
                 # Check if form already exists
                 existing_form = self.env["social.lead.form"].search([
@@ -1700,19 +1700,19 @@ class SocialAccount(models.Model):
                     # Update existing form
                     existing_form.write(form_values)
                     updated_count += 1
-                    _logger.info(f"  ✓ Updated form: {form_name}")
+                    _logger.debug(f"  ✓ Updated form: {form_name}")
                 else:
                     # Create new form
                     self.env["social.lead.form"].create(form_values)
                     created_count += 1
-                    _logger.info(f"  ✓ Created form: {form_name}")
+                    _logger.debug(f"  ✓ Created form: {form_name}")
 
             except Exception as e:
-                _logger.error(f"ERROR: Error processing form {form_data.get('id')}: {str(e)}")
+                _logger.error(f"Error processing form {form_data.get('id')}: {str(e)}")
                 continue
 
-        _logger.info(f"Lead forms sync completed: {created_count} created, {updated_count} updated")
-        _logger.info("--- END LEAD FORMS SYNC ---\n")
+        _logger.debug(f"Lead forms sync completed: {created_count} created, {updated_count} updated")
+        _logger.debug("--- END LEAD FORMS SYNC ---\n")
 
         return created_count + updated_count
 
@@ -1725,10 +1725,10 @@ class SocialAccount(models.Model):
         """
         self.ensure_one()
         if not self.page_id or not self.page_access_token:
-            _logger.warning(f"WARNING: No page_id or access token for account {self.name}")
+            _logger.warning(f"No page_id or access token for account {self.name}")
             return
 
-        _logger.info(f"Syncing comments for page: {self.page_name}")
+        _logger.debug(f"Syncing comments for page: {self.page_name}")
 
         # Get all Facebook post accounts for this account
         post_accounts = self.env["social.post.account"].search([
@@ -1761,7 +1761,7 @@ class SocialAccount(models.Model):
 
                 if isinstance(response, dict) and response.get("data"):
                     comments_data = response.get("data", [])
-                    _logger.info(f"Retrieved {len(comments_data)} comments for post {post_id}")
+                    _logger.debug(f"Retrieved {len(comments_data)} comments for post {post_id}")
 
                     for comment_data in comments_data:
                         self._process_comment_data(comment_data, post.id)
@@ -1772,10 +1772,10 @@ class SocialAccount(models.Model):
                             self._sync_comment_replies(comment_data.get("id"), post.id)
 
             except Exception as e:
-                _logger.error(f"ERROR: Error syncing comments for post {post.fb_content_id}: {str(e)}")
+                _logger.error(f"Error syncing comments for post {post.fb_content_id}: {str(e)}")
                 continue
 
-        _logger.info(f"Comments sync completed: {total_comments_synced} comments synced")
+        _logger.debug(f"Comments sync completed: {total_comments_synced} comments synced")
 
     def _sync_comment_replies(self, parent_comment_id, post_id):
         """Sync replies to a comment"""
@@ -1802,7 +1802,7 @@ class SocialAccount(models.Model):
                     self._process_comment_data(reply_data, post_id, parent_comment.id if parent_comment else False)
 
         except Exception as e:
-            _logger.error(f"ERROR: Error syncing replies for comment {parent_comment_id}: {str(e)}")
+            _logger.error(f"Error syncing replies for comment {parent_comment_id}: {str(e)}")
 
     def _process_comment_data(self, comment_data, post_id, parent_id=False):
         """Process and store comment data"""
@@ -1923,10 +1923,10 @@ class SocialAccount(models.Model):
         )
 
         if isinstance(response, dict) and response.get("id"):
-            _logger.info(f"Successfully replied to comment {comment_id}")
+            _logger.debug(f"Successfully replied to comment {comment_id}")
             return response
         else:
-            _logger.error(f"ERROR: Failed to reply to comment {comment_id}: {response}")
+            _logger.error(f"Failed to reply to comment {comment_id}: {response}")
             return False
 
     def _hide_facebook_comment(self, comment_id):
@@ -1960,7 +1960,7 @@ class SocialAccount(models.Model):
 
         # Check if response is successful (dict with success=True)
         if isinstance(response, dict) and response.get("success"):
-            _logger.info(f"Successfully hid comment {comment_id}")
+            _logger.debug(f"Successfully hid comment {comment_id}")
             return {
                 "success": True,
                 "message": "Comment hidden successfully",
@@ -1997,7 +1997,7 @@ class SocialAccount(models.Model):
             except Exception:
                 pass
 
-            _logger.error(f"ERROR: Failed to hide comment {comment_id}: {error_msg}")
+            _logger.error(f"Failed to hide comment {comment_id}: {error_msg}")
             return {
                 "success": False,
                 "message": error_msg,
@@ -2005,7 +2005,7 @@ class SocialAccount(models.Model):
             }
 
         # Unknown response format
-        _logger.error(f"ERROR: Unexpected response format for comment {comment_id}: {response}")
+        _logger.error(f"Unexpected response format for comment {comment_id}: {response}")
         return {
             "success": False,
             "message": f"Unexpected response from Facebook: {response}",
@@ -2026,10 +2026,10 @@ class SocialAccount(models.Model):
         """
         self.ensure_one()
         if not self.page_id or not self.page_access_token:
-            _logger.warning(f"WARNING: No page_id or access token for account {self.name}")
+            _logger.warning(f"No page_id or access token for account {self.name}")
             return
 
-        _logger.info(f"Syncing leads for page: {self.page_name}")
+        _logger.debug(f"Syncing leads for page: {self.page_name}")
 
         # Get all lead forms for this account
         lead_forms = self.env["social.lead.form"].search([
@@ -2044,7 +2044,7 @@ class SocialAccount(models.Model):
 
         for lead_form in lead_forms:
             try:
-                _logger.info(f"Syncing leads for form: {lead_form.name} (ID: {lead_form.fb_form_id})")
+                _logger.debug(f"Syncing leads for form: {lead_form.name} (ID: {lead_form.fb_form_id})")
 
                 # Build params
                 params = {
@@ -2073,14 +2073,14 @@ class SocialAccount(models.Model):
 
                 if isinstance(response, dict) and response.get("data"):
                     leads_data = response.get("data", [])
-                    _logger.info(f"Retrieved {len(leads_data)} leads for form {lead_form.name}")
+                    _logger.debug(f"Retrieved {len(leads_data)} leads for form {lead_form.name}")
 
                     for lead_data in leads_data:
                         try:
                             lead_form._process_lead_data(lead_data)
                             total_leads_synced += 1
                         except Exception as e:
-                            _logger.error(f"ERROR: Error processing lead {lead_data.get('id')}: {str(e)}")
+                            _logger.error(f"Error processing lead {lead_data.get('id')}: {str(e)}")
                             continue
 
                     # Update last sync time for this form
@@ -2089,10 +2089,10 @@ class SocialAccount(models.Model):
                     _logger.warning(f"No new leads for form {lead_form.name}")
 
             except Exception as e:
-                _logger.error(f"ERROR: Error syncing leads for form {lead_form.name}: {str(e)}")
+                _logger.error(f"Error syncing leads for form {lead_form.name}: {str(e)}")
                 continue
 
-        _logger.info(f"Leads sync completed: {total_leads_synced} leads synced")
+        _logger.debug(f"Leads sync completed: {total_leads_synced} leads synced")
 
     def _sync_facebook_content(self, from_datetime=None, to_datetime=None, types=None):
         """Manual sync action with optional filters
@@ -2130,47 +2130,47 @@ class SocialAccount(models.Model):
         else:
             accounts = self.search([("media_type", "=", "facebook"), ("status", "=", "active")])
 
-        _logger.info("=" * 80)
-        _logger.info(f"Manual sync started for {len(accounts)} Facebook account(s)")
-        _logger.info(f"Parameters: from={from_datetime}, to={to_datetime}, types={types}")
+        _logger.debug("=" * 80)
+        _logger.debug(f"Manual sync started for {len(accounts)} Facebook account(s)")
+        _logger.debug(f"Parameters: from={from_datetime}, to={to_datetime}, types={types}")
 
         for account in accounts:
             try:
-                _logger.info("\n" + "=" * 80)
-                _logger.info(f"Syncing account: {account.name} (ID: {account.id})")
-                _logger.info("=" * 80)
+                _logger.debug("\n" + "=" * 80)
+                _logger.debug(f"Syncing account: {account.name} (ID: {account.id})")
+                _logger.debug("=" * 80)
 
                 # Sync posts if requested (includes all posts: text, images, videos/reels)
                 if 'posts' in types:
-                    _logger.info("\n--- POSTS SYNC ---")
+                    _logger.debug("\n--- POSTS SYNC ---")
                     account._sync_facebook_posts_filtered(from_datetime, to_datetime)
-                    _logger.info("--- END POSTS SYNC ---\n")
+                    _logger.debug("--- END POSTS SYNC ---\n")
 
                 # Sync ads if requested
                 if 'ads' in types:
-                    _logger.info("\n--- ADS SYNC ---")
+                    _logger.debug("\n--- ADS SYNC ---")
                     account._sync_facebook_ads(from_datetime, to_datetime)
-                    _logger.info("--- END ADS SYNC ---\n")
+                    _logger.debug("--- END ADS SYNC ---\n")
 
                 # Sync comments if requested (Feature #4: Comment Moderation System)
                 if 'comments' in types:
-                    _logger.info("\n--- COMMENTS SYNC ---")
+                    _logger.debug("\n--- COMMENTS SYNC ---")
                     account._sync_facebook_comments(from_datetime, to_datetime)
-                    _logger.info("--- END COMMENTS SYNC ---\n")
+                    _logger.debug("--- END COMMENTS SYNC ---\n")
 
                 # Sync leads if requested (Feature #5: Lead Ads Integration)
                 if 'leads' in types:
-                    _logger.info("  - Syncing leads...")
+                    _logger.debug("  - Syncing leads...")
                     account._sync_facebook_leads(from_datetime, to_datetime)
 
-                _logger.info("  ✓ Account sync completed")
+                _logger.debug("  ✓ Account sync completed")
 
             except Exception as e:
-                _logger.error(f"ERROR: Error syncing account {account.name}: {str(e)}")
+                _logger.error(f"Error syncing account {account.name}: {str(e)}")
                 continue
 
-        _logger.info("Manual sync completed for all accounts")
-        _logger.info("=" * 80)
+        _logger.debug("Manual sync completed for all accounts")
+        _logger.debug("=" * 80)
 
     def _run_check_media_updates(self):
         """Override base module hook to auto-sync Facebook content every 30 minutes
@@ -2195,7 +2195,7 @@ class SocialAccount(models.Model):
         import logging
         _logger = logging.getLogger(__name__)
 
-        _logger.info(f"Auto-sync: Starting for {len(facebook_accounts)} Facebook account(s)")
+        _logger.debug(f"Auto-sync: Starting for {len(facebook_accounts)} Facebook account(s)")
 
         # Sync recent content (last 24 hours)
         from datetime import timedelta
@@ -2204,7 +2204,7 @@ class SocialAccount(models.Model):
 
         for account in facebook_accounts:
             try:
-                _logger.info(f"Auto-syncing Facebook account: {account.name}")
+                _logger.debug(f"Auto-syncing Facebook account: {account.name}")
                 # Call the main sync method with recent content filter
                 account._sync_facebook_content(
                     from_datetime=from_datetime,
@@ -2215,18 +2215,18 @@ class SocialAccount(models.Model):
                 _logger.error(f"Error auto-syncing Facebook account {account.name}: {e}")
                 continue
 
-        _logger.info("Auto-sync: Completed for all Facebook accounts")
+        _logger.debug("Auto-sync: Completed for all Facebook accounts")
         return True
 
     def _sync_facebook_posts_filtered(self, from_datetime=None, to_datetime=None):
         """Sync posts with optional date filters"""
-        _logger.debug("=== DEBUG: _sync_facebook_posts_filtered called")
+        _logger.debug("=== _sync_facebook_posts_filtered called")
         self.ensure_one()
         if not self.page_id or not self.page_access_token:
-            _logger.warning(f"=== WARNING: No page_id or access token for account {self.name}")
+            _logger.warning(f"=== No page_id or access token for account {self.name}")
             return
 
-        _logger.info(f"=== Syncing posts for page: {self.page_name}")
+        _logger.debug(f"=== Syncing posts for page: {self.page_name}")
 
         # Build params with date filters
         fields_str = (
@@ -2254,13 +2254,13 @@ class SocialAccount(models.Model):
         # Call existing sync logic
         endpoint = f"{self.page_id}/posts"
         response = self._request_facebook(endpoint=endpoint, params=params)
-        _logger.debug("=== DEBUG: Facebook posts response received")
-        _logger.debug(f"=== DEBUG: Response: {response}")
+        _logger.debug("Facebook posts response received")
+        _logger.debug(f"Response: {response}")
         if isinstance(response, dict) and response.get("data"):
             self._process_posts_data(response.get("data", []))
             self.last_posts_sync_at = fields.Datetime.now()
         else:
-            _logger.warning(f"=== WARNING: No posts data in response: {response}")
+            _logger.warning(f"No posts data in response: {response}")
 
     def _sync_facebook_reels_filtered(self, from_datetime=None, to_datetime=None):
         """Sync reels/videos with optional date filters"""
@@ -2268,7 +2268,7 @@ class SocialAccount(models.Model):
         if not self.page_id or not self.page_access_token:
             return
 
-        _logger.info(f"=== Syncing videos for page: {self.page_name}")
+        _logger.debug(f"Syncing videos for page: {self.page_name}")
 
         # Note: Requesting basic video fields + engagement data + source (video URL)
         # likes, comments are available as summary data on the Video object
@@ -2291,36 +2291,36 @@ class SocialAccount(models.Model):
             params["until"] = int(to_datetime.timestamp())
 
         endpoint = f"{self.page_id}/videos"
-        _logger.debug(f"=== DEBUG: Requesting reels from endpoint: {endpoint}")
-        _logger.debug(f"=== DEBUG: Request params: {params}")
+        _logger.debug(f"Requesting reels from endpoint: {endpoint}")
+        _logger.debug(f"Request params: {params}")
 
         response = self._request_facebook(endpoint=endpoint, params=params)
 
-        _logger.debug(f"=== DEBUG: Response type: {type(response)}")
-        _logger.debug(f"=== DEBUG: Response value: {response}")
+        _logger.debug(f"Response type: {type(response)}")
+        _logger.debug(f"Response value: {response}")
 
         # Check if response is an error (Response object instead of dict)
         if hasattr(response, 'status_code'):
-            _logger.error(f"=== ERROR: HTTP {response.status_code} response from Facebook API")
-            _logger.error(f"=== ERROR: Response text: {response.text}")
+            _logger.error(f"HTTP {response.status_code} response from Facebook API")
+            _logger.error(f"Response text: {response.text}")
             try:
                 error_data = response.json()
-                _logger.error(f"=== ERROR: Error details: {error_data}")
+                _logger.error(f"Error details: {error_data}")
                 if 'error' in error_data:
-                    _logger.error(f"=== ERROR: Facebook error message: {error_data['error'].get('message')}")
-                    _logger.error(f"=== ERROR: Facebook error code: {error_data['error'].get('code')}")
-                    _logger.error(f"=== ERROR: Facebook error type: {error_data['error'].get('type')}")
+                    _logger.error(f"Facebook error message: {error_data['error'].get('message')}")
+                    _logger.error(f"Facebook error code: {error_data['error'].get('code')}")
+                    _logger.error(f"Facebook error type: {error_data['error'].get('type')}")
             except:
                 pass
             return
 
         if isinstance(response, dict) and response.get("data"):
             videos_data = response.get("data", [])
-            _logger.info(f"=== SUCCESS: Retrieved {len(videos_data)} videos")
+            _logger.debug(f"Retrieved {len(videos_data)} videos")
             self._process_reels_data(videos_data)
             self.last_reels_sync_at = fields.Datetime.now()
         else:
-            _logger.warning(f"=== WARNING: No videos data in response: {response}")
+            _logger.warning(f"No videos data in response: {response}")
 
     def _parse_facebook_datetime(self, datetime_str):
         """Parse Facebook ISO 8601 datetime string to Python naive datetime
@@ -2363,7 +2363,7 @@ class SocialAccount(models.Model):
             # Download image from URL
             response = requests.get(url, timeout=10)
             if response.status_code != 200:
-                _logger.warning(f"WARNING: Failed to download image from {url}, status: {response.status_code}")
+                _logger.warning(f"Failed to download image from {url}, status: {response.status_code}")
                 return False
 
             # Generate filename if not provided
@@ -2383,11 +2383,11 @@ class SocialAccount(models.Model):
                 # res_id will be set later when linking to post
             })
 
-            _logger.info(f"Downloaded image: {filename} (ID: {attachment.id})")
+            _logger.debug(f"Downloaded image: {filename} (ID: {attachment.id})")
             return attachment
 
         except Exception as e:
-            _logger.error(f"ERROR: Failed to download image from {url}: {str(e)}")
+            _logger.error(f"Failed to download image from {url}: {str(e)}")
             return False
 
     def _attach_media_to_post(self, post, media_urls, video_id=None):
@@ -2420,11 +2420,11 @@ class SocialAccount(models.Model):
         # Link attachments to post via image_ids field
         if attachment_ids:
             post.write({"image_ids": [(6, 0, attachment_ids)]})
-            _logger.info(f"  ✓ Attached {len(attachment_ids)} media files to post {post.id}")
+            _logger.debug(f"Attached {len(attachment_ids)} media files to post {post.id}")
 
         # Handle video if present
         if video_id:
-            _logger.info(f"  ℹ️  Post has video ID: {video_id}")
+            _logger.debug(f"Post has video ID: {video_id}")
             # Note: Video files are typically too large to download and store
             # For now we just log the video ID
             # Alternative: Could download video thumbnail instead
@@ -2457,21 +2457,21 @@ class SocialAccount(models.Model):
 
             if isinstance(response, dict) and response.get("data", {}).get("url"):
                 picture_url = response["data"]["url"]
-                _logger.info(f"  Page picture URL: {picture_url[:80]}...")
+                _logger.debug(f"  Page picture URL: {picture_url[:80]}...")
 
                 # Download the image
                 img_response = requests.get(picture_url, timeout=10)
                 if img_response.status_code == 200:
                     return base64.b64encode(img_response.content)
                 else:
-                    _logger.warning(f"  WARNING: Failed to download page picture, status: {img_response.status_code}")
+                    _logger.warning(f"Failed to download page picture, status: {img_response.status_code}")
                     return False
             else:
-                _logger.warning(f"  WARNING: No picture URL in response: {response}")
+                _logger.warning(f"No picture URL in response: {response}")
                 return False
 
         except Exception as e:
-            _logger.error(f"  ERROR: Failed to download page picture: {str(e)}")
+            _logger.error(f"Failed to download page picture: {str(e)}")
             return False
 
     def _process_posts_data(self, posts_data):
@@ -2589,7 +2589,7 @@ class SocialAccount(models.Model):
                         "state": metrics_data.get("state"),
                     })
                     updated_count += 1
-                    _logger.info(f"  ✓ Updated social.post ID: {existing_post.id} (FB: {fb_content_id})")
+                    _logger.debug(f"Updated social.post ID: {existing_post.id} (FB: {fb_content_id})")
                     # Update post_account record with Facebook metrics
                     self._ensure_post_account_exists(existing_post, metrics_data, post_data)
                 else:
@@ -2604,15 +2604,15 @@ class SocialAccount(models.Model):
                     if "image_ids" in metrics_data:
                         post.write({"image_ids": metrics_data["image_ids"]})
                     created_count += 1
-                    _logger.info(f"  ✓ Created social.post ID: {post.id} (FB: {fb_content_id})")
+                    _logger.debug(f"Created social.post ID: {post.id} (FB: {fb_content_id})")
                     # Create post_account record with Facebook metrics
                     self._ensure_post_account_exists(post, metrics_data, post_data)
 
             except Exception as e:
-                _logger.error(f"ERROR: Error processing post {post_data.get('id')}: {str(e)}")
+                _logger.error(f"Error processing post {post_data.get('id')}: {str(e)}")
                 continue
 
-        _logger.info(f"Posts processed: {created_count} created, {updated_count} updated")
+        _logger.debug(f"Posts processed: {created_count} created, {updated_count} updated")
 
     def _process_reels_data(self, videos_data):
         """Extract reel processing logic for reuse"""
@@ -2683,7 +2683,7 @@ class SocialAccount(models.Model):
                 if video_source:
                     import json
                     video_urls_json = json.dumps([video_source])
-                    _logger.info(f"  ℹ️  Video has source URL: {video_source}")
+                    _logger.debug(f"Video has source URL: {video_source}")
 
                 metrics_data = {
                     "message": video_data.get("description", "") or video_data.get("title", "") or f"Video {fb_content_id}",
@@ -2714,7 +2714,7 @@ class SocialAccount(models.Model):
                         "state": metrics_data.get("state"),
                     })
                     updated_count += 1
-                    _logger.info(f"  ✓ Updated social.post ID: {existing_post.id} (FB: {fb_content_id})")
+                    _logger.debug(f"Updated social.post ID: {existing_post.id} (FB: {fb_content_id})")
                     # Update post_account record with Facebook metrics
                     self._ensure_post_account_exists(existing_post, metrics_data, video_data)
                 else:
@@ -2727,15 +2727,15 @@ class SocialAccount(models.Model):
                         "state": metrics_data.get("state"),
                     })
                     created_count += 1
-                    _logger.info(f"  ✓ Created social.post ID: {post.id} (FB: {fb_content_id})")
+                    _logger.debug(f"Created social.post ID: {post.id} (FB: {fb_content_id})")
                     # Create post_account record with Facebook metrics
                     self._ensure_post_account_exists(post, metrics_data, video_data)
 
             except Exception as e:
-                _logger.error(f"ERROR: Error processing video {video_data.get('id')}: {str(e)}")
+                _logger.error(f"Error processing video {video_data.get('id')}: {str(e)}")
                 continue
 
-        _logger.info(f"Reels processed: {created_count} created, {updated_count} updated")
+        _logger.debug(f"Reels processed: {created_count} created, {updated_count} updated")
 
     def _serialize_metrics_json(self, metrics_data):
         """Serialize metrics_data to JSON, converting datetime objects to ISO strings
@@ -2763,7 +2763,7 @@ class SocialAccount(models.Model):
             return json.dumps(serializable_data, indent=2)
         except Exception as e:
             # Fallback: return minimal JSON with error
-            _logger.warning(f"WARNING: Error serializing metrics_data: {str(e)}")
+            _logger.warning(f"Error serializing metrics_data: {str(e)}")
             return json.dumps({"error": "Serialization failed", "fb_content_id": metrics_data.get("fb_content_id")})
 
     def _ensure_post_account_exists(self, post, metrics_data, fb_data):
@@ -2847,7 +2847,7 @@ class SocialAccount(models.Model):
         if existing_post_account:
             # Update existing record with ALL Facebook fields
             existing_post_account.write(fb_fields)
-            _logger.info(f"    → Updated social.post.account ID: {existing_post_account.id} (linked to post ID: {post.id})")
+            _logger.debug(f"Updated social.post.account ID: {existing_post_account.id} (linked to post ID: {post.id})")
         else:
             # Create new post_account record with ALL Facebook fields
             fb_fields.update(
@@ -2859,8 +2859,8 @@ class SocialAccount(models.Model):
             )
 
             new_post_account = self.env["social.post.account"].create(fb_fields)
-            _logger.info(
-                f"    → Created social.post.account ID: {new_post_account.id} (linked to post ID: {post.id})"
+            _logger.debug(
+                f"Created social.post.account ID: {new_post_account.id} (linked to post ID: {post.id})"
             )
 
     # Facebook Insights: Impressions and Engagements
@@ -2911,7 +2911,7 @@ class SocialAccount(models.Model):
             Scheduled job to update Facebook 
             page insights (impressions and engagement).
         """
-        _logger.info("=== [CRON] Running Facebook Insights update ===")
+        _logger.debug("[CRON] Running Facebook Insights update ===")
         facebook_accounts = self.search([('media_type', '=', 'facebook')])
         for account in facebook_accounts:
             account.update_facebook_impressions_engagements()

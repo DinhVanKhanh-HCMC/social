@@ -42,13 +42,13 @@ class FacebookWebhookController(http.Controller):
         )
 
         _logger.warning("Webhook verification request received")
-        _logger.info(f"Mode: {hub_mode}, Token: {hub_verify_token}")
+        _logger.debug(f"Mode: {hub_mode}, Token: {hub_verify_token}")
 
         if hub_mode == "subscribe" and hub_verify_token == verify_token:
-            _logger.info("Webhook verification successful, returning challenge")
+            _logger.debug("Webhook verification successful, returning challenge")
             return hub_challenge
         else:
-            _logger.warning("WARNING: Webhook verification failed!")
+            _logger.warning("Webhook verification failed!")
             return "Verification failed", 403
 
     @http.route(
@@ -88,15 +88,15 @@ class FacebookWebhookController(http.Controller):
             # Verify signature
             signature = request.httprequest.headers.get("X-Hub-Signature-256", "")
             if not self._verify_signature(request.httprequest.data, signature):
-                _logger.warning("WARNING: Invalid webhook signature!")
+                _logger.warning("Invalid webhook signature!")
                 return "Invalid signature", 403
 
             # Parse webhook data
             data = json.loads(request.httprequest.data)
-            _logger.info(f"Received webhook data: {json.dumps(data, indent=2)}")
+            _logger.debug(f"Received webhook data: {json.dumps(data, indent=2)}")
 
             if data.get("object") != "page":
-                _logger.warning("WARNING: Webhook object is not 'page', ignoring")
+                _logger.warning("Webhook object is not 'page', ignoring")
                 return "OK"
 
             # Process each entry
@@ -108,7 +108,7 @@ class FacebookWebhookController(http.Controller):
             return "OK"
 
         except Exception as e:
-            _logger.error(f"ERROR: Error processing webhook: {str(e)}")
+            _logger.error(f"Error processing webhook: {str(e)}")
             return "Error", 500
 
     def _verify_signature(self, payload, signature_header):
@@ -130,7 +130,7 @@ class FacebookWebhookController(http.Controller):
         )
 
         if not app_secret:
-            _logger.warning("WARNING: App secret not configured, skipping signature verification")
+            _logger.warning("App secret not configured, skipping signature verification")
             return True  # Allow webhooks if secret not configured
 
         # Compute expected signature
@@ -158,14 +158,14 @@ class FacebookWebhookController(http.Controller):
                     "created_time": 1234567890
                 }
         """
-        _logger.info(f"Processing leadgen webhook: {leadgen_data}")
+        _logger.debug(f"Processing leadgen webhook: {leadgen_data}")
 
         lead_id = leadgen_data.get("leadgen_id")
         form_id = leadgen_data.get("form_id")
         page_id = leadgen_data.get("page_id")
 
         if not all([lead_id, form_id, page_id]):
-            _logger.warning("WARNING: Missing required fields in leadgen data")
+            _logger.warning("Missing required fields in leadgen data")
             return
 
         # Find the lead form in Odoo
@@ -173,14 +173,14 @@ class FacebookWebhookController(http.Controller):
         lead_form = LeadForm.search([("fb_form_id", "=", form_id)], limit=1)
 
         if not lead_form:
-            _logger.warning(f"WARNING: Lead form {form_id} not found in Odoo, skipping")
+            _logger.warning(f"Lead form {form_id} not found in Odoo, skipping")
             return
 
         # Fetch full lead data from Facebook
         try:
             account = lead_form.account_id
             if not account or not account.page_access_token:
-                _logger.warning(f"WARNING: No access token for lead form {form_id}")
+                _logger.warning(f"No access token for lead form {form_id}")
                 return
 
             # Fetch lead details from Facebook API
@@ -195,9 +195,9 @@ class FacebookWebhookController(http.Controller):
             if isinstance(response, dict):
                 # Process the lead data
                 lead_form._process_lead_data(response)
-                _logger.info(f"Successfully processed lead {lead_id}")
+                _logger.debug(f"Successfully processed lead {lead_id}")
             else:
-                _logger.error(f"ERROR: Failed to fetch lead {lead_id} from Facebook: {response}")
+                _logger.error(f"Failed to fetch lead {lead_id} from Facebook: {response}")
 
         except Exception as e:
-            _logger.error(f"ERROR: Error fetching lead from Facebook: {str(e)}")
+            _logger.error(f"Error fetching lead from Facebook: {str(e)}")

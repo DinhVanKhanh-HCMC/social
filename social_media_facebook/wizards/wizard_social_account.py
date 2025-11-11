@@ -37,19 +37,19 @@ class WizardSocialAccount(models.TransientModel):
         result = super()._action_add_account()
         context = dict(self.env.context)
         if self.media_type == "facebook":
-            _logger.info("=" * 80)
-            _logger.info("Wizard: Starting Facebook OAuth flow...")
-            _logger.info(f"Wizard ID: {self.id}")
+            _logger.debug("=" * 80)
+            _logger.debug("Wizard: Starting Facebook OAuth flow...")
+            _logger.debug(f"Wizard ID: {self.id}")
 
             # Use wizard fields (like LinkedIn and X do)
             app_id = self.facebook_app_id
             app_secret = self.facebook_app_secret
 
-            _logger.info(f"App ID: {app_id}")
-            _logger.info(f"App Secret configured: {bool(app_secret)}")
+            _logger.debug(f"App ID: {app_id}")
+            _logger.debug(f"figured: {bool(app_secret)}")
 
             redirect_url = self._get_url_redirect()
-            _logger.info(f"OAuth redirect URL: {redirect_url}")
+            _logger.debug(f"OAuth redirect URL: {redirect_url}")
 
             params = {
                 "client_id": app_id,
@@ -58,8 +58,8 @@ class WizardSocialAccount(models.TransientModel):
                 "response_type": "code",
             }
             url_auth = f"{_URL_AUTH_FACEBOOK}?{url_encode(params)}"
-            _logger.info(f"Facebook OAuth URL: {url_auth[:100]}...")
-            _logger.info("=" * 80)
+            _logger.debug(f"Facebook OAuth URL: {url_auth[:100]}...")
+            _logger.debug("=" * 80)
 
             if not context.get("only_url", False):
                 return {

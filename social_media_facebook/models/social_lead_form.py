@@ -52,10 +52,10 @@ class SocialLeadForm(models.Model):
     def _sync_facebook_leads(self):
         """Facebook-specific lead sync implementation"""
         self.ensure_one()
-        _logger.info(f"Manually syncing leads for Facebook form: {self.name}")
+        _logger.debug(f"Manually syncing leads for Facebook form: {self.name}")
 
         if not self.account_id.page_access_token:
-            _logger.warning(f"WARNING: No access token for account {self.account_id.name}")
+            _logger.warning(f"No access token for account {self.account_id.name}")
             return
 
         # Fetch leads from Facebook
@@ -81,7 +81,7 @@ class SocialLeadForm(models.Model):
 
         if isinstance(response, dict) and response.get("data"):
             leads_data = response.get("data", [])
-            _logger.info(f"Retrieved {len(leads_data)} leads from Facebook")
+            _logger.debug(f"Retrieved {len(leads_data)} leads from Facebook")
 
             created_count = 0
             failed_count = 0
@@ -90,7 +90,7 @@ class SocialLeadForm(models.Model):
                     self._process_facebook_lead_data(lead_data)
                     created_count += 1
                 except Exception as e:
-                    _logger.error(f"ERROR: Error processing lead {lead_data.get('id')}: {str(e)}")
+                    _logger.error(f"Error processing lead {lead_data.get('id')}: {str(e)}")
                     failed_count += 1
                     continue
 
@@ -98,7 +98,7 @@ class SocialLeadForm(models.Model):
             if failed_count == 0:
                 self.last_sync_at = fields.Datetime.now()
             elif created_count > 0:
-                _logger.warning(f"WARNING: {failed_count} leads failed to process, last_sync_at not updated")
+                _logger.warning(f"{failed_count} leads failed to process, last_sync_at not updated")
 
             # Return notification with results
             if failed_count > 0:
@@ -124,7 +124,7 @@ class SocialLeadForm(models.Model):
                     },
                 }
         else:
-            _logger.warning(f"WARNING: No leads data in response: {response}")
+            _logger.warning(f"No leads data in response: {response}")
 
     def _process_facebook_lead_data(self, lead_data):
         """Process and store Facebook lead data"""
@@ -136,7 +136,7 @@ class SocialLeadForm(models.Model):
         )
 
         if existing_lead:
-            _logger.info(f"Lead {fb_lead_id} already exists, skipping")
+            _logger.debug(f"Lead {fb_lead_id} already exists, skipping")
             return existing_lead
 
         # Parse field data
@@ -263,7 +263,7 @@ class SocialLead(models.Model):
                 "status": "converted",
             })
 
-            _logger.info(f"Created CRM lead {crm_lead.id} from Facebook lead {self.fb_lead_id}")
+            _logger.debug(f"Created CRM lead {crm_lead.id} from Facebook lead {self.fb_lead_id}")
 
             return {
                 "type": "ir.actions.act_window",
@@ -274,7 +274,7 @@ class SocialLead(models.Model):
             }
 
         except Exception as e:
-            _logger.error(f"ERROR: Error creating CRM lead: {str(e)}")
+            _logger.error(f"Error creating CRM lead: {str(e)}")
             self.write({
                 "status": "error",
                 "error_message": str(e),

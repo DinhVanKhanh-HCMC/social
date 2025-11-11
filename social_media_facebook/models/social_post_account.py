@@ -257,7 +257,7 @@ class SocialPostAccount(models.Model):
                     )
 
                     # Sync back the post data from Facebook to get analytics
-                    _logger.info(f"Syncing back published post {post_id} to get Facebook data...")
+                    _logger.debug(f"Syncing back published post {post_id} to get Facebook data...")
                     self._sync_published_post_from_facebook(post_id)
                 else:
                     self.write(
@@ -268,7 +268,7 @@ class SocialPostAccount(models.Model):
                     )
             except Exception as e:
                 error_msg = str(e)
-                _logger.error(f"ERROR: Failed to post to Facebook: {error_msg}")
+                _logger.error(f"Failed to post to Facebook: {error_msg}")
                 self.write(
                     {
                         "state": "failed",
@@ -306,7 +306,7 @@ class SocialPostAccount(models.Model):
             response = self.account_id._request_facebook(endpoint=fb_post_id, params=params)
 
             if isinstance(response, dict) and response.get("id"):
-                _logger.info(f"Successfully fetched post data from Facebook for {fb_post_id}")
+                _logger.debug(f"Successfully fetched post data from Facebook for {fb_post_id}")
 
                 # Extract metrics
                 likes_count = (
@@ -357,16 +357,16 @@ class SocialPostAccount(models.Model):
                     }
                 )
 
-                _logger.info(f"Updated social.post.account {self.id} with Facebook data")
-                _logger.info(f"  fb_content_id: {response.get('id')}")
-                _logger.info(
+                _logger.debug(f"Updated social.post.account {self.id} with Facebook data")
+                _logger.debug(f"  fb_content_id: {response.get('id')}")
+                _logger.debug(
                     f"  Likes: {likes_count}, Comments: {comments_count}, Shares: {shares_count}"
                 )
             else:
-                _logger.warning(f"WARNING: Failed to fetch post data from Facebook: {response}")
+                _logger.warning(f"Failed to fetch post data from Facebook: {response}")
 
         except Exception as e:
-            _logger.error(f"ERROR: Error syncing published post from Facebook: {str(e)}")
+            _logger.error(f"Error syncing published post from Facebook: {str(e)}")
 
     def action_open_external_post(self):
         """Open the external Facebook post URL in a new browser tab"""
@@ -438,7 +438,7 @@ class SocialPostAccount(models.Model):
             }
 
         except Exception as e:
-            _logger.error(f"ERROR: Failed to get comments for post {self.id}: {str(e)}")
+            _logger.error(f"Failed to get comments for post {self.id}: {str(e)}")
             return {
                 "success": False,
                 "data": [],
@@ -519,7 +519,7 @@ class SocialPostAccount(models.Model):
                     return {"success": False, "message": "Failed to post comment"}
 
         except Exception as e:
-            _logger.error(f"ERROR: Failed to create comment: {str(e)}")
+            _logger.error(f"Failed to create comment: {str(e)}")
             return {"success": False, "message": f"Error: {str(e)}"}
 
     def write_metrics_snapshot(self, metrics_data):
@@ -608,5 +608,5 @@ class SocialPostAccount(models.Model):
                 return {"success": False, "message": "Failed to post comment to Facebook"}
 
         except Exception as e:
-            _logger.error(f"ERROR: Failed to post comment: {str(e)}")
+            _logger.error(f"Failed to post comment: {str(e)}")
             return {"success": False, "message": f"Error: {str(e)}"}
