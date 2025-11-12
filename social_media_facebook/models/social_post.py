@@ -2,6 +2,8 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
 from odoo import _, api, models, fields
+import logging
+_logger = logging.getLogger(__name__)
 
 
 class SocialPost(models.Model):
@@ -111,6 +113,46 @@ class SocialPost(models.Model):
         elif operator == "!=" and not value:
             return [("id", "in", post_ids)]
         return []
+    
+    def action_create_post_account(self):
+        """
+        Override to handle posting to multiple Facebook accounts.
+        """
+        self._action_create_post_account()
+
+    def _action_create_post_account(self):
+        """
+        Override base method to post to ALL accounts, not just [0].
+        """
+        for post in self:
+            post.write(
+                {
+                    "state": "publishing",
+                    "published_date": fields.Datetime.now(),
+                    "post_account_ids": post._prepare_post_account_values(),
+                }
+            )
+
+            for post_account in post.post_account_ids:
+                try:
+                    _logger.debug(f"Posting to account: {post_account.account_id.name}")
+                    post_account._action_post()
+                except Exception as e:
+                    _logger.error(
+                        f"Failed to post to {post_account.account_id.name}: {str(e)}",
+                        exc_info=True
+                    )
+                    post_account.write({
+                        "state": "failed",
+                        "failed_description": f"<p>Error: {str(e)}</p>"
+                    })
+                    continue
+
+            post.write(
+                {
+                    "state": "published",
+                }
+            )
 
     @api.depends(
         "post_account_ids.impressions_total",

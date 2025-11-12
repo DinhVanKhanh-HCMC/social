@@ -231,19 +231,27 @@ class SocialPostAccount(models.Model):
 
     def _action_post(self):
         """Publish post to Facebook and sync back metadata"""
-        super()._action_post()
+        self.ensure_one()
+        _logger.debug(f"Starting _action_post for {self.id} - Account: \
+            {self.account_id.name}, Media: {self.account_id.media_type}")
+        
         if self.account_id.media_type == "facebook":
             try:
-                # Set posting state
+                _logger.debug(f"Setting state to 'posting' for account {self.id}")
                 self.write({"state": "posting"})
-
+                _logger.debug(f"State set successfully. Now calling account._action_post()")
+                
                 # content_type is now stored on base model
                 post_id = self.account_id._action_post(
                     message=self.message,
                     image_ids=self.image_ids,
                     video_ids=self.video_ids,
                 )
+                _logger.debug(f"account._action_post() returned post_id: {post_id}")
+                
                 if post_id:
+                    _logger.debug(f"Successfully got post_id {post_id}, \
+                        updating state to 'posted'")
                     # Write basic post info first
                     self.write(
                         {
@@ -255,26 +263,35 @@ class SocialPostAccount(models.Model):
                             "failed_description": False,  # Clear any previous errors
                         }
                     )
+                    _logger.debug(f"Successfully updated account {self.id} to 'posted' state")
 
                     # Sync back the post data from Facebook to get analytics
                     _logger.debug(f"Syncing back published post {post_id} to get Facebook data...")
                     self._sync_published_post_from_facebook(post_id)
+                    _logger.debug(f"Sync completed for post {post_id}")
                 else:
+                    _logger.warning(f"No post_id returned from account._action_post()")
                     self.write(
                         {
                             "state": "failed",
-                            "failed_description": "<p>Failed to post on Facebook. No post ID returned from API.</p>",
+                            "failed_description": "<p>Failed to post on Facebook. \
+                                No post ID returned from API.</p>",
                         }
                     )
             except Exception as e:
                 error_msg = str(e)
-                _logger.error(f"Failed to post to Facebook: {error_msg}")
+                _logger.error(f"Exception in _action_post for account \
+                    {self.id}: {error_msg}", exc_info=True)
                 self.write(
                     {
                         "state": "failed",
                         "failed_description": f"<p><strong>Error:</strong> {error_msg}</p>",
                     }
                 )
+        else:
+            # For non-Facebook accounts, call parent
+            _logger.debug(f"Non-Facebook account, calling super()._action_post()")
+            super()._action_post()
 
     def _sync_published_post_from_facebook(self, fb_post_id):
         """Sync back a newly published post from Facebook to populate metrics
