@@ -232,6 +232,16 @@ class SocialPostAccount(models.Model):
     def _action_post(self):
         """Publish post to Facebook and sync back metadata"""
         self.ensure_one()
+        
+        # DEBUG: Check what we're actually receiving
+        _logger.debug(f"_action_post: Post {self.post_id.id}, Account: {self.account_id.name}")
+        _logger.debug(f"Images: {self.image_ids.ids}, Count: {len(self.image_ids)}")
+        _logger.debug(f"Videos: {self.video_ids.ids}, Count: {len(self.video_ids)}")
+        
+        if self.image_ids:
+            for i, image in enumerate(self.image_ids):
+                _logger.debug(f"Image {i+1}: {image.name}, ID: {image.id}, Data: {'Yes' if image.datas else 'No'}")
+        
         _logger.debug(f"Starting _action_post for {self.id} - Account: \
             {self.account_id.name}, Media: {self.account_id.media_type}")
         

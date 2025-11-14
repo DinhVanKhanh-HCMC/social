@@ -437,20 +437,46 @@ class SocialAccount(models.Model):
         timeout=10,
         data=None,
         json_data=None,
+        files=None,
     ):
         url = f"{_URL_GRAPH_FACEBOOK}/{endpoint}"
-        response = requests.request(
-            method=method,
-            url=url,
-            params=params,
-            timeout=timeout,
-            headers=headers,
-            data=data,
-            json=json_data,
-        )
-        if response.status_code == 200:
-            return response.json()
-        return response
+        
+        if headers is None:
+            headers = {}
+        
+        _logger.debug(f"Facebook API: {method} {url}")
+        if files:
+            _logger.debug(f"Uploading files: {list(files.keys())}")
+            actual_timeout = 60  # 60 seconds for file uploads
+        else:
+            actual_timeout = timeout
+        
+        try:
+            response = requests.request(
+                method=method,
+                url=url,
+                params=params,
+                timeout=actual_timeout, 
+                headers=headers,
+                data=data,
+                json=json_data,
+                files=files,
+            )
+            
+            _logger.debug(f"Facebook API response: {response.status_code}")
+            
+            if response.status_code == 200:
+                return response.json()
+            else:
+                _logger.error(f"Facebook API error {response.status_code}: {response.text}")
+                return {"error": f"{response.status_code}: {response.text}"}
+                
+        except requests.exceptions.Timeout:
+            _logger.error(f"Facebook API timeout after {actual_timeout}s")
+            return {"error": f"Timeout after {actual_timeout}s"}
+        except Exception as e:
+            _logger.error(f"Facebook request failed: {str(e)}")
+            return {"error": str(e)}
 
     def update_account(self):
         res = super().update_account()
@@ -803,164 +829,222 @@ class SocialAccount(models.Model):
             }
 
     def _action_post(self, message, image_ids=None, video_ids=None, link=None):
-        """Feature #6: Enhanced Publishing - Multi-photo, video, and link support"""
-        if self.media_type == "facebook" and self.page_access_token:
-            base_params = {
-                "access_token": self.page_access_token,
-            }
+        """Enhanced Facebook publishing with proper image and video support - SINGLE METHOD"""
+        if self.media_type != "facebook" or not self.page_access_token:
+            _logger.error("Facebook account not properly configured")
+            return False
 
-            # Handle multiple images (requires multi-step process)
-            if image_ids and len(image_ids) > 1:
-                _logger.debug(f"Publishing multi-photo post with {len(image_ids)} images")
+        _logger.debug(f"Starting Facebook post: {len(image_ids or [])} images, {len(video_ids or [])} videos")
+        
+        base_params = {"access_token": self.page_access_token}
+        
+        try:
+            import io
+            import base64
+            import json
 
-                # Step 1: Upload all photos and collect their IDs
-                import io
-                photo_ids = []
-                for image in image_ids:
-                    upload_endpoint = f"{self.page_id}/photos"
-
-                    try:
-                        # Upload photo using multipart form data
+            # ===== HANDLE SINGLE IMAGE =====
+            if image_ids and len(image_ids) == 1:
+                _logger.debug("Posting single image to Facebook")
+                
+                try:
+                    image = image_ids[0]
+                    if image.datas:
                         image_data = base64.b64decode(image.datas)
-                        url = f"{_URL_GRAPH_FACEBOOK}/{upload_endpoint}"
-
+                        params = {
+                            "message": message,
+                            "access_token": self.page_access_token,
+                        }
                         files = {
-                            'source': ('image.jpg', io.BytesIO(image_data), 'image/jpeg')
-                        }
-                        data = {
-                            'published': 'false',  # Upload unpublished
-                            'access_token': self.page_access_token,
+                            'source': (image.name or 'image.jpg', io.BytesIO(image_data), 'image/jpeg')
                         }
 
-                        photo_response = requests.post(url, files=files, data=data, timeout=30)
+                        response = self._request_facebook(
+                            method="POST",
+                            endpoint=f"{self.page_id}/photos",
+                            params=params,
+                            files=files,
+                            timeout=60  # 60 seconds for image upload
+                        )
 
-                        if photo_response.status_code == 200:
-                            result = photo_response.json()
-                            if result.get("id"):
-                                photo_ids.append(result["id"])
-                                _logger.debug(f"Uploaded photo ID: {result['id']}")
+                        if isinstance(response, dict):
+                            if response.get("post_id"):
+                                _logger.debug(f"Single image post created: {response['post_id']}")
+                                return response.get("post_id")
+                            elif response.get("id"):
+                                _logger.debug(f"Single image uploaded: {response['id']}")
+                                return response.get("id")
+                            else:
+                                _logger.error(f"Image upload failed: {response}")
                         else:
-                            _logger.error(f"Failed to upload photo, status: {photo_response.status_code}")
+                            _logger.error(f"Image upload failed, invalid response: {response}")
+                    else:
+                        _logger.error("Image has no data")
+                        
+                except Exception as e:
+                    _logger.error(f"Single image upload error: {str(e)}", exc_info=True)
+
+                # Fallback to text
+                return self._post_text_only_fallback(message, base_params)
+
+            # ===== HANDLE MULTIPLE IMAGES =====
+            elif image_ids and len(image_ids) > 1:
+                _logger.debug(f"Posting {len(image_ids)} images to Facebook")
+                
+                photo_ids = []
+                for i, image in enumerate(image_ids):
+                    try:
+                        if image.datas:
+                            image_data = base64.b64decode(image.datas)
+                            upload_params = {
+                                "published": "false",
+                                "access_token": self.page_access_token,
+                            }
+                            files = {
+                                'source': (image.name or 'image.jpg', io.BytesIO(image_data), 'image/jpeg')
+                            }
+                            
+                            upload_response = self._request_facebook(
+                                method="POST",
+                                endpoint=f"{self.page_id}/photos",
+                                params=upload_params,
+                                files=files,
+                                timeout=60  # 60 seconds for each image upload
+                            )
+                            
+                            if isinstance(upload_response, dict) and upload_response.get("id"):
+                                photo_ids.append(upload_response["id"])
+                                _logger.debug(f"Uploaded image {i+1}/{len(image_ids)}: {upload_response['id']}")
+                            else:
+                                _logger.warning(f"Failed to upload image {i+1}/{len(image_ids)}: {upload_response}")
+                        else:
+                            _logger.warning(f"Image {i+1} has no data")
                     except Exception as e:
-                        _logger.error(f"Error uploading photo: {str(e)}")
+                        _logger.error(f"Error uploading image {i+1}: {str(e)}")
                         continue
 
-                # Step 2: Create post with all photo IDs
                 if photo_ids:
                     post_params = base_params.copy()
                     post_params["message"] = message
-
-                    # Build attached_media parameter
                     attached_media = [{"media_fbid": photo_id} for photo_id in photo_ids]
                     post_params["attached_media"] = json.dumps(attached_media)
 
-                    endpoint = f"{self.page_id}/feed"
                     response = self._request_facebook(
                         method="POST",
-                        endpoint=endpoint,
+                        endpoint=f"{self.page_id}/feed",
                         params=post_params,
                     )
 
                     if isinstance(response, dict) and response.get("id"):
-                        _logger.debug(f"Multi-photo post created: {response['id']}")
+                        _logger.debug(f"Multi-image post created: {response['id']}")
                         return response.get("id")
 
-            # Handle single image
-            elif image_ids and len(image_ids) == 1:
-                _logger.debug("Publishing single photo post")
-                endpoint = f"{self.page_id}/photos"
+                # Fallback to text if image upload fails
+                _logger.warning("Image upload failed, falling back to text post")
+                return self._post_text_only_fallback(message, base_params)
 
-                try:
-                    # Upload photo using multipart form data
-                    import io
-                    image_data = base64.b64decode(image_ids[0].datas)
-
-                    # Use requests directly with files parameter for proper multipart upload
-                    url = f"{_URL_GRAPH_FACEBOOK}/{endpoint}"
-                    files = {
-                        'source': ('image.jpg', io.BytesIO(image_data), 'image/jpeg')
-                    }
-                    data = {
-                        'message': message,
-                        'access_token': self.page_access_token,
-                    }
-
-                    response = requests.post(url, files=files, data=data, timeout=30)
-
-                    if response.status_code == 200:
-                        result = response.json()
-                        if result.get("post_id"):
-                            _logger.debug(f"Single photo post created: {result['post_id']}")
-                            return result.get("post_id")
-                        elif result.get("id"):
-                            _logger.debug(f"Photo uploaded: {result['id']}")
-                            return result.get("id")
-                    else:
-                        _logger.error(f"Error publishing photo, status: {response.status_code}, response: {response.text}")
-                except Exception as e:
-                    _logger.error(f"Error publishing photo: {str(e)}")
-
-            # Handle video
+            # ===== HANDLE VIDEO =====
             elif video_ids and len(video_ids) > 0:
-                _logger.debug("Publishing video post")
-                endpoint = f"{self.page_id}/videos"
-                params = base_params.copy()
-                params["description"] = message
-
+                _logger.debug("Posting video to Facebook")
+                
                 try:
-                    # Upload video file
-                    video_data = base64.b64decode(video_ids[0].datas)
-                    files = {"source": video_data}
+                    video = video_ids[0]  
+                    if video.datas:
+                        
+                        _logger.debug(f"Video details: {video.name}, MIME: {video.mimetype}, Size: {len(video.datas)} bytes")
+                        
+                        video_data = base64.b64decode(video.datas)
+                        params = {
+                            "description": message,
+                            "access_token": self.page_access_token,
+                        }
+                        
+                        
+                        file_extension = '.mp4'
+                        if video.name and '.' in video.name:
+                            file_extension = '.' + video.name.split('.')[-1]
+                        
+                        filename = video.name or f"video{file_extension}"
+                        mime_type = video.mimetype or 'video/mp4'
+                        
+                        files = {
+                            'source': (filename, io.BytesIO(video_data), mime_type)
+                        }
 
-                    response = self._request_facebook(
-                        method="POST",
-                        endpoint=endpoint,
-                        params=params,
-                        data=files,
-                        timeout=60,  # Longer timeout for video uploads
-                    )
+                        _logger.debug(f"Uploading video: {filename}, MIME: {mime_type}")
 
-                    if isinstance(response, dict) and response.get("id"):
-                        _logger.debug(f"Video post created: {response['id']}")
-                        return response.get("id")
+                        response = self._request_facebook(
+                            method="POST",
+                            endpoint=f"{self.page_id}/videos",
+                            params=params,
+                            files=files,
+                            timeout=120,
+                        )
+
+                        if isinstance(response, dict):
+                            if response.get("id"):
+                                _logger.debug(f"Video post created: {response['id']}")
+                                return response.get("id")
+                            else:
+                                _logger.error(f"Video upload failed - Facebook error: {response}")
+                        else:
+                            _logger.error(f"Video upload failed - Invalid response: {response}")
+                    else:
+                        _logger.error("Video has no data")
+                        
                 except Exception as e:
-                    _logger.error(f"Error publishing video: {str(e)}")
+                    _logger.error(f"Video upload error: {str(e)}", exc_info=True)
 
-            # Handle link post
+                # Fallback to text
+                return self._post_text_only_fallback(message, base_params)
+
+            # ===== HANDLE LINK =====
             elif link:
-                _logger.debug("Publishing link post")
-                endpoint = f"{self.page_id}/feed"
+                _logger.debug("Posting link to Facebook")
+                
                 params = base_params.copy()
                 params["message"] = message
                 params["link"] = link
 
                 response = self._request_facebook(
                     method="POST",
-                    endpoint=endpoint,
+                    endpoint=f"{self.page_id}/feed",
                     params=params,
                 )
 
                 if isinstance(response, dict) and response.get("id"):
                     _logger.debug(f"Link post created: {response['id']}")
                     return response.get("id")
+                else:
+                    _logger.error(f"Link post failed: {response}")
 
-            # Handle text-only post
+            # ===== HANDLE TEXT-ONLY =====
             else:
-                _logger.debug("Publishing text-only post")
-                endpoint = f"{self.page_id}/feed"
-                params = base_params.copy()
-                params["message"] = message
+                return self._post_text_only_fallback(message, base_params)
 
-                response = self._request_facebook(
-                    method="POST",
-                    endpoint=endpoint,
-                    params=params,
-                )
+        except Exception as e:
+            _logger.error(f"Facebook posting failed: {str(e)}", exc_info=True)
+        
+        return False
 
-                if isinstance(response, dict) and response.get("id"):
-                    _logger.debug(f"Text post created: {response['id']}")
-                    return response.get("id")
+    def _post_text_only_fallback(self, message, base_params):
+        """Internal helper for text-only posts"""
+        _logger.debug("Posting text-only message to Facebook")
+        
+        params = base_params.copy()
+        params["message"] = message
 
+        response = self._request_facebook(
+            method="POST",
+            endpoint=f"{self.page_id}/feed",
+            params=params,
+        )
+
+        if isinstance(response, dict) and response.get("id"):
+            _logger.debug(f"Text post created: {response['id']}")
+            return response.get("id")
+        
+        _logger.error(f"Text post failed: {response}")
         return False
 
     def _update_posts_statistics(self, post_id, domain):

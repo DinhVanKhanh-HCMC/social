@@ -123,8 +123,15 @@ class SocialPost(models.Model):
     def _action_create_post_account(self):
         """
         Override base method to post to ALL accounts, not just [0].
+        FIX: Ensure image_ids and video_ids are properly passed to post accounts
         """
         for post in self:
+            # DEBUG: Check what images we have
+            _logger.debug(f"Post {post.id}: {len(post.image_ids)} images, {len(post.video_ids)} videos")
+            if post.image_ids:
+                for i, image in enumerate(post.image_ids):
+                    _logger.debug(f"Image {i+1}: {image.name}, ID: {image.id}")
+
             post.write(
                 {
                     "state": "publishing",
@@ -136,6 +143,13 @@ class SocialPost(models.Model):
             for post_account in post.post_account_ids:
                 try:
                     _logger.debug(f"Posting to account: {post_account.account_id.name}")
+                    _logger.debug(f"Post account has {len(post_account.image_ids)} images, {len(post_account.video_ids)} videos")
+                    
+                    post_account.write({
+                        'image_ids': [(6, 0, post.image_ids.ids)],  
+                        'video_ids': [(6, 0, post.video_ids.ids)],  
+                    })
+                    
                     post_account._action_post()
                 except Exception as e:
                     _logger.error(
