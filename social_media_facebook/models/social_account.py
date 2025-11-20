@@ -2951,7 +2951,7 @@ class SocialAccount(models.Model):
     def get_facebook_impressions_engagements(self, page_id, access_token):
         endpoint = f"{page_id}/insights"
         params = {
-            "metric": "page_impressions,page_post_engagements",
+            "metric": "page_media_view,page_post_engagements",
             "period": "days_28",
             "access_token": access_token,
         }
@@ -2975,7 +2975,7 @@ class SocialAccount(models.Model):
             )
             metrics = record.parse_facebook_impressions_engagements(data)
 
-            impression_count = metrics.get("page_impressions", 0)
+            impression_count = metrics.get("page_media_view", 0)
             interactions_count = metrics.get("page_post_engagements", 0)
             engagement_rate = 0.0
 
