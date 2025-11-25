@@ -66,7 +66,7 @@ class WizardFetchPages(models.TransientModel):
                 self.user_access_token,
                 wizard_social_account
             )
-            _logger.debug("Account creation completed", created_account_ids)
+            _logger.debug(f"Account creation completed: ", {created_account_ids})
         else:
             _logger.warning("No pages selected!")
 

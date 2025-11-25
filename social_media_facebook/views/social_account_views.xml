@@ -50,7 +50,7 @@
         <group name="facebook_credentials" string="App Credentials">
           <field name="media_type" invisible="1"/>
           <field name="facebook_app_id" readonly="1"/>
-          <field name="facebook_app_secret" widget="password" readonly="1"/>
+          <field name="facebook_app_secret" password="True" readonly="1"/>
           <field name="fb_ad_account_id" placeholder="act_123456789"/>
         </group>
 
@@ -58,7 +58,7 @@
         <group name="facebook_page_info" string="Page Information">
           <field name="page_id" readonly="1"/>
           <field name="page_name" readonly="1"/>
-          <field name="page_access_token" widget="password" readonly="1"/>
+          <field name="page_access_token" password="True" readonly="1"/>
           <field name="token_expires_at" readonly="1"/>
           <field name="status"/>
           <!-- Environment: test or production -->
