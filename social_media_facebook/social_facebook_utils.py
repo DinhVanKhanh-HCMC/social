@@ -15,6 +15,7 @@ _HEADERS_FACEBOOK = {
 # Base scopes for all features
 _SCOPE_FACEBOOK = [
     "pages_show_list",           # Required: List available pages
+    "business_management",      # Required: Manage business assets
     "pages_read_engagement",     # Required: Read post metrics
     "public_profile",            # Required: Basic profile info
 ]
@@ -36,6 +37,7 @@ _SCOPE_FACEBOOK_LEADS = [
 _SCOPE_FACEBOOK_ADS = [
     "ads_management",            # Feature #2: Full access to Marketing API (campaigns, adsets, ads, creatives)
     "ads_read",                  # Feature #2.2: Read ad insights (included in ads_management but explicit)
+    "pages_manage_ads"
 ]
 
 # Combined default scopes (enable all features)

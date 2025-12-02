@@ -1,7 +1,7 @@
 # Copyright 2025 Kencove (https://www.kencove.com/)
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
-from odoo import _, api, models, fields
+from odoo import api, models, fields
 import logging
 _logger = logging.getLogger(__name__)
 
@@ -234,9 +234,8 @@ class SocialPost(models.Model):
                 "author": account.name,
                 "message": self.message,
                 "image_ids": self.image_ids[0:2],
-                "account_image": account.image_128,  # Pass account avatar
+                "account_image": account.with_context(bin_size=False).image_128,  # Pass account avatar
             }
-
             try:
                 render_template += """\n\n""" + IrQweb._render(
                     "social_media_{}.social_network_post_preview".format(
@@ -250,6 +249,6 @@ class SocialPost(models.Model):
                     values | self._render_values_preview(),
                 )
 
-        return render_template if render_template else _("No preview available")
+        return render_template if render_template else self.env._("No preview available")
 
     # No override needed - content_type is now handled by base model

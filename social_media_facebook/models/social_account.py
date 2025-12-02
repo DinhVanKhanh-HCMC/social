@@ -1262,7 +1262,7 @@ class SocialAccount(models.Model):
         - Reactions by type: /{POST_ID}/insights?metric=post_reactions_by_type_total
         - Comments: /{POST_ID}?fields=comments.summary(true)
         - Shares: /{POST_ID}?fields=shares
-        - Impressions: /{POST_ID}/insights?metric=post_impressions
+        - Impressions: /{POST_ID}/insights?metric=post_media_view
         - Reach (unique): /{POST_ID}/insights?metric=post_impressions_unique
         - Clicks: /{POST_ID}/insights?metric=post_clicks
         """
@@ -2317,7 +2317,7 @@ class SocialAccount(models.Model):
             "id,message,created_time,permalink_url,"
             "attachments{media_type,media,url,subattachments{media{image}}},"
             "likes.summary(true),comments.summary(true),shares,"
-            "insights.metric(post_impressions,post_impressions_unique,"
+            "insights.metric(post_media_view,post_impressions_unique,"
             "post_reactions_by_type_total,post_clicks)"
         )
         params = {
@@ -2624,7 +2624,7 @@ class SocialAccount(models.Model):
                     values = insight.get("values", [])
                     if values:
                         value = values[0].get("value", 0)
-                        if metric_name == "post_impressions":
+                        if metric_name == "post_media_view":
                             impressions_total = value
                         elif metric_name == "post_impressions_unique":
                             reach_unique = value
