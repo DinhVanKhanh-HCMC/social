@@ -1,8 +1,10 @@
 # Copyright 2025 Kencove (https://www.kencove.com/)
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
-from odoo import api, models, fields
 import logging
+
+from odoo import api, fields, models
+
 _logger = logging.getLogger(__name__)
 
 
@@ -113,7 +115,7 @@ class SocialPost(models.Model):
         elif operator == "!=" and not value:
             return [("id", "in", post_ids)]
         return []
-    
+
     def action_create_post_account(self):
         """
         Override to handle posting to multiple Facebook accounts.
@@ -127,7 +129,9 @@ class SocialPost(models.Model):
         """
         for post in self:
             # DEBUG: Check what images we have
-            _logger.debug(f"Post {post.id}: {len(post.image_ids)} images, {len(post.video_ids)} videos")
+            _logger.debug(
+                f"Post {post.id}: {len(post.image_ids)} images, {len(post.video_ids)} videos"
+            )
             if post.image_ids:
                 for i, image in enumerate(post.image_ids):
                     _logger.debug(f"Image {i+1}: {image.name}, ID: {image.id}")
@@ -143,23 +147,29 @@ class SocialPost(models.Model):
             for post_account in post.post_account_ids:
                 try:
                     _logger.debug(f"Posting to account: {post_account.account_id.name}")
-                    _logger.debug(f"Post account has {len(post_account.image_ids)} images, {len(post_account.video_ids)} videos")
-                    
-                    post_account.write({
-                        'image_ids': [(6, 0, post.image_ids.ids)],  
-                        'video_ids': [(6, 0, post.video_ids.ids)],  
-                    })
-                    
+                    _logger.debug(
+                        f"Post account has {len(post_account.image_ids)} images, {len(post_account.video_ids)} videos"
+                    )
+
+                    post_account.write(
+                        {
+                            "image_ids": [(6, 0, post.image_ids.ids)],
+                            "video_ids": [(6, 0, post.video_ids.ids)],
+                        }
+                    )
+
                     post_account._action_post()
                 except Exception as e:
                     _logger.error(
                         f"Failed to post to {post_account.account_id.name}: {str(e)}",
-                        exc_info=True
+                        exc_info=True,
                     )
-                    post_account.write({
-                        "state": "failed",
-                        "failed_description": f"<p>Error: {str(e)}</p>"
-                    })
+                    post_account.write(
+                        {
+                            "state": "failed",
+                            "failed_description": f"<p>Error: {str(e)}</p>",
+                        }
+                    )
                     continue
 
             post.write(
@@ -234,13 +244,13 @@ class SocialPost(models.Model):
                 "author": account.name,
                 "message": self.message,
                 "image_ids": self.image_ids[0:2],
-                "account_image": account.with_context(bin_size=False).image_128,  # Pass account avatar
+                "account_image": account.with_context(
+                    bin_size=False
+                ).image_128,  # Pass account avatar
             }
             try:
                 render_template += """\n\n""" + IrQweb._render(
-                    "social_media_{}.social_network_post_preview".format(
-                        account.media_id.media_type
-                    ),
+                    f"social_media_{account.media_id.media_type}.social_network_post_preview",
                     values | self._render_values_preview(),
                 )
             except ValueError:
@@ -249,6 +259,8 @@ class SocialPost(models.Model):
                     values | self._render_values_preview(),
                 )
 
-        return render_template if render_template else self.env._("No preview available")
+        return (
+            render_template if render_template else self.env._("No preview available")
+        )
 
     # No override needed - content_type is now handled by base model

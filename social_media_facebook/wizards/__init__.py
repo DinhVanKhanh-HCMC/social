@@ -4,3 +4,4 @@
 from . import wizard_facebook_sync
 from . import wizard_fetch_pages
 from . import wizard_social_account
+from . import wizard_facebook_system_user

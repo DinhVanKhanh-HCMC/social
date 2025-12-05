@@ -32,3 +32,12 @@ class SocialMedia(models.Model):
                 },
             }
         return res
+    
+    def action_open_system_user_token_wizard(self):
+        return {
+            "type": "ir.actions.act_window",
+            "name": "System User Token",
+            "res_model": "wizard.facebook.system.user",
+            "view_mode": "form",
+            "target": "new",
+        }

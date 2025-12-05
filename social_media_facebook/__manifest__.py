@@ -25,9 +25,11 @@
         "views/social_lead_views.xml",
         "views/utm_campaign_views.xml",
         "views/social_media_facebook_menus.xml",
+        "views/social_media_views.xml",
         "wizards/wizard_facebook_sync.xml",
         "wizards/wizard_fetch_pages.xml",
         "wizards/wizard_social_account.xml",
+        "wizards/wizard_facebook_system_user.xml",
     ],
     "assets": {
         "web.assets_backend": [
