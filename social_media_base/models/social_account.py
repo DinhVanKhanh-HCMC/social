@@ -93,7 +93,7 @@ class SocialAccount(models.Model):
     engagement = fields.Float(default=0)
 
     account_url = fields.Char(compute="_compute_account_url", store=True)
-    enviroment = fields.Selection(
+    environment = fields.Selection(
         [("test", "Test"), ("production", "Production")], default="test"
     )
     need_update = fields.Boolean(default=False)

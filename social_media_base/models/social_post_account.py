@@ -58,6 +58,12 @@ class SocialPostAccount(models.Model):
         column1="post_id",
         column2="image_id",
     )
+    
+    fb_video_url = fields.Char(
+        string="Facebook Video URL",
+        help="URL to display video in template. Generated from video_ids or synced from Facebook."
+    )
+    
     failed_description = fields.Html()
     post_account_url = fields.Char()
     author = fields.Char(related="account_id.name", store=True)

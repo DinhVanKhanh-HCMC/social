@@ -231,6 +231,12 @@ class SocialPost(models.Model):
     def _prepare_post_account_values(self):
         posts_account = []
         for account in self.account_ids:
+            fb_video_url = None
+            if self.video_ids:
+                first_video = self.video_ids[0]
+                # Generate the URL for the video attachment
+                fb_video_url = f"/web/image/{first_video._name}/{first_video.id}/datas"
+            
             posts_account.append(
                 Command.create(
                     {
@@ -238,6 +244,7 @@ class SocialPost(models.Model):
                         "account_id": account.id,
                         "state": "ready",
                         "message": self.message,
+                        "fb_video_url": fb_video_url,
                     }
                 )
             )
