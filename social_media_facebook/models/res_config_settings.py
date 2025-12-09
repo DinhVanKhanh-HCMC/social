@@ -24,6 +24,21 @@ class ResConfigSettings(models.TransientModel):
         readonly=True,
         help="Copy this URL to your Facebook App Settings → Products → Facebook Login → Valid OAuth Redirect URIs",
     )
+    
+    # === Facebook system user token ===
+    facebook_system_user_token = fields.Char(
+        string="System User Token",
+        config_parameter="social_media_base.facebook_system_user_token",
+    )
+    
+    def action_open_system_user_token_wizard(self):
+        return {
+            "type": "ir.actions.act_window",
+            "name": "System User Token",
+            "res_model": "wizard.facebook.system.user",
+            "view_mode": "form",
+            "target": "new",
+        }
 
     # === Facebook Lead Ads Webhook ===
     facebook_webhook_verify_token = fields.Char(

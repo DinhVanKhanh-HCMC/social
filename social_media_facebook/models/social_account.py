@@ -196,7 +196,7 @@ class SocialAccount(models.Model):
         _logger.debug(f"Account: {self.page_name}")
         _logger.debug(f"Page ID: {self.page_id}")
         _logger.debug(f"Ad Account: {self.fb_ad_account_id}")
-        _logger.debug(f"Environment: {self.enviroment or 'test'}")
+        _logger.debug(f"Environment: {self.environment or 'test'}")
         _logger.debug("")
 
         # Test 1: Ad Account Info
@@ -1316,7 +1316,7 @@ class SocialAccount(models.Model):
             return
 
         # Log environment and status for diagnostics
-        env_mode = self.enviroment or "test"
+        env_mode = self.environment or "test"
         account_status = self.status or "active"
         _logger.debug(f"Syncing ads for: {self.page_name}")
         _logger.debug(f"  Ad Account: {self.fb_ad_account_id}")

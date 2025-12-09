@@ -62,7 +62,7 @@
           <field name="token_expires_at" readonly="1"/>
           <field name="status"/>
           <!-- Environment: test or production -->
-          <field name="enviroment"/>
+          <field name="environment"/>
         </group>
 
         <!-- Sync Status -->

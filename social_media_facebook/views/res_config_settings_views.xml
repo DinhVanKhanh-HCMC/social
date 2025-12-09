@@ -14,6 +14,11 @@
           <!-- Facebook Section -->
           <block title="Facebook">
             <setting help="Configure your Facebook App credentials for OAuth authentication">
+              <div class="row mt32">
+                <div class="col-lg-12">
+                  <h4>Application (Meta Developers)</h4>
+                </div>
+              </div>
               <div class="content-group">
                 <div class="row mt16">
                   <label for="facebook_app_id" class="col-lg-3 o_light_label" string="App ID"/>
@@ -38,6 +43,42 @@
                         <li>Add the <b>Redirect URI</b> above to Facebook Login → Settings → Valid OAuth Redirect URIs</li>
                       </ol>
                     </div>
+                  </div>
+                </div>
+
+                <!-- System User Token Section -->
+                <div class="row mt32">
+                  <div class="col-lg-12">
+                    <h4>System User (Business Manager)</h4>
+                  </div>
+                </div>
+
+                <div class="row mt16">
+                  <div class="col-lg-12">
+                    <div class="alert alert-info" role="alert">
+                      <strong>What is a System User?</strong>
+                      <p>A <b>System User</b> is a non-login user created inside your <b>Meta Business</b> for backend/API operations.  
+                      It is the recommended method for server-to-server integrations and does <b>not require real user login</b>.</p>
+
+                      <strong>How to create a System User:</strong>
+                      <ol class="mb-0">
+                        <li>Go to <a href="https://business.facebook.com/settings/system-users" target="_blank">Business Settings → System Users</a></li>
+                        <li>Create a new <b>System User</b> → assign role <b>Admin</b> or <b>Employee</b></li>
+                        <li>Add an <b>Asset</b> → select <b>Pages</b> → grant permissions</li>
+                        <li>Generate a <b>System User Access Token</b> for your App</li>
+                        <li>Copy the token and paste into the field above</li>
+                      </ol>
+
+                      <p class="mb-0 mt-2"><small>
+                        <b>Tip:</b> System User Tokens do not expire quickly and are ideal for stable server integrations.
+                      </small></p>
+                    </div>
+                  </div>
+                  <div class="col-lg-12">
+                    <button type="object" class="btn btn-primary"
+                            name="action_open_system_user_token_wizard">
+                      Connect Using System User
+                    </button>
                   </div>
                 </div>
 
