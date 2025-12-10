@@ -159,7 +159,7 @@
 
       <!-- Post message -->
       <div class="mb-2 p-2" t-if="message">
-        <t t-out="message"/>
+        <div class="o_social_message_preview" t-esc="message"/>
       </div>
 
       <!-- Images preview -->

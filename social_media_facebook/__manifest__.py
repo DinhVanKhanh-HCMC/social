@@ -35,6 +35,7 @@
         "web.assets_backend": [
             # STYLES
             "social_media_facebook/static/src/scss/facebook_dashboard.scss",
+            "social_media_facebook/static/src/scss/facebook_post.scss",
             # SERVICES
             "social_media_facebook/static/src/js/services/**/*.js",
             # COMPONENTS
