@@ -38,11 +38,12 @@
                             <label for="message" string="Message"/>
                             <field name="message" nolabel="1" placeholder="Write a message or upload an image"/>
 
-                            <label for="image_ids" string="Attach Images"/>
+                            <label for="image_ids" string="Attach Images" invisible="video_ids"/>
                             <field
                                 name="image_ids"
                                 widget="many2many_binary"
                                 nolabel="1"
+                                invisible="video_ids"
                                 options="{'accepted_file_extensions': 'image/jpeg, image/png, image/jpg'}"
                             />
 
