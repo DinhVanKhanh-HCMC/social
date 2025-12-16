@@ -99,6 +99,11 @@ class WizardFacebookSystemUser(models.TransientModel):
                             f"(ID: {page_id}): {e}"
                         )
                     
+                    if token:
+                        vals["facebook_system_user_token"] = token
+                        vals["facebook_app_id"] = False
+                        vals["facebook_app_secret"] = False
+                    
                     if exiting:
                         exiting.write(vals)
                         updated.append(exiting.id)
@@ -112,8 +117,12 @@ class WizardFacebookSystemUser(models.TransientModel):
                 )
                 failed.append({"page_id": page_id, "error": str(e)})
         try:
-            key = "social_media_facebook.system_user_token"
+            key = "social_media_base.facebook_system_user_token"
             self.env["ir.config_parameter"].sudo().set_param(key, token)
+            self.env["ir.config_parameter"].sudo().set_param(
+                "social_media_base.facebook_connection_method",
+                "system_user"
+            )
         except Exception as e:
             _logger.error(
                 f"Failed to save system user token to config parameters: {e}"

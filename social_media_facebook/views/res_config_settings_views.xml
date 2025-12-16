@@ -17,31 +17,34 @@
               <div class="row mt32">
                 <div class="col-lg-12">
                   <h4>Application (Meta Developers)</h4>
+                  <field name="use_app_login" widget="boolean_toggle" readonly="1"/>
                 </div>
               </div>
               <div class="content-group">
-                <div class="row mt16">
-                  <label for="facebook_app_id" class="col-lg-3 o_light_label" string="App ID"/>
-                  <field name="facebook_app_id" placeholder="e.g., 1234567890123456"/>
-                </div>
-                <div class="row">
-                  <label for="facebook_app_secret" class="col-lg-3 o_light_label" string="App Secret"/>
-                  <field name="facebook_app_secret" password="True" placeholder="Enter your Facebook App Secret"/>
-                </div>
-                <div class="row">
-                  <label for="facebook_redirect_uri" class="col-lg-3 o_light_label" string="Redirect URI"/>
-                  <field name="facebook_redirect_uri" readonly="1" widget="CopyClipboardChar"/>
-                </div>
-                <div class="row mt16">
-                  <div class="col-lg-12">
-                    <div class="alert alert-info" role="alert">
-                      <strong>Setup:</strong>
-                      <ol class="mb-0">
-                        <li>Go to <a href="https://developers.facebook.com/apps/" target="_blank">Facebook Developers</a>, create/select an app</li>
-                        <li>Add <b>Facebook Login</b> product</li>
-                        <li>Copy <b>App ID</b> and <b>App Secret</b> from Settings → Basic</li>
-                        <li>Add the <b>Redirect URI</b> above to Facebook Login → Settings → Valid OAuth Redirect URIs</li>
-                      </ol>
+                <div invisible="not use_app_login">
+                  <div class="row mt16">
+                    <label for="facebook_app_id" class="col-lg-3 o_light_label" string="App ID"/>
+                    <field name="facebook_app_id" placeholder="e.g., 1234567890123456"/>
+                  </div>
+                  <div class="row">
+                    <label for="facebook_app_secret" class="col-lg-3 o_light_label" string="App Secret"/>
+                    <field name="facebook_app_secret" password="True" placeholder="Enter your Facebook App Secret"/>
+                  </div>
+                  <div class="row">
+                    <label for="facebook_redirect_uri" class="col-lg-3 o_light_label" string="Redirect URI"/>
+                    <field name="facebook_redirect_uri" readonly="1" widget="CopyClipboardChar"/>
+                  </div>
+                  <div class="row mt16">
+                    <div class="col-lg-12">
+                      <div class="alert alert-info" role="alert">
+                        <strong>Setup:</strong>
+                        <ol class="mb-0">
+                          <li>Go to <a href="https://developers.facebook.com/apps/" target="_blank">Facebook Developers</a>, create/select an app</li>
+                          <li>Add <b>Facebook Login</b> product</li>
+                          <li>Copy <b>App ID</b> and <b>App Secret</b> from Settings → Basic</li>
+                          <li>Add the <b>Redirect URI</b> above to Facebook Login → Settings → Valid OAuth Redirect URIs</li>
+                        </ol>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -50,10 +53,15 @@
                 <div class="row mt32">
                   <div class="col-lg-12">
                     <h4>System User (Business Manager)</h4>
+                    <field name="use_system_user" widget="boolean_toggle" readonly="1"/>
                   </div>
                 </div>
 
-                <div class="row mt16">
+                <div class="row mt16" invisible="not use_system_user">
+                  <div class="row">
+                    <label for="facebook_system_user_token" class="col-lg-3 o_light_label" string="System User Token"/>
+                    <field name="facebook_system_user_token" password="True" placeholder="Enter your System User Token"/>
+                  </div>
                   <div class="col-lg-12">
                     <div class="alert alert-info" role="alert">
                       <strong>What is a System User?</strong>

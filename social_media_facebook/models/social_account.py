@@ -35,6 +35,8 @@ class SocialAccount(models.Model):
     # App credentials (stored per account like LinkedIn/X)
     facebook_app_id = fields.Char(string="App ID")
     facebook_app_secret = fields.Char(string="App Secret")
+    
+    facebook_system_user_token = fields.Char(string="System User Token")
 
     # Ad account for Marketing API access
     fb_ad_account_id = fields.Char(
@@ -85,6 +87,16 @@ class SocialAccount(models.Model):
         if not app_secret and self.facebook_app_secret:
             return self.facebook_app_secret
         return app_secret
+    
+    def _get_facebook_system_user_token(self):
+        """Get Facebook system user token from settings"""
+        system_user_token = self.env["ir.config_parameter"].sudo().get_param(
+            "social_media_base.facebook_system_user_token"
+        )
+        # Fallback to per-account field for backward compatibility
+        if not system_user_token and self.facebook_system_user_token:
+            return self.facebook_system_user_token
+        return system_user_token
 
     @api.depends("media_type")
     def _compute_facebook_posts_count(self):
@@ -689,6 +701,10 @@ class SocialAccount(models.Model):
                 account_ids.append(new_account.id)
                 created_count += 1
             else:
+                if existing_account.facebook_system_user_token:
+                    values_data.update({
+                        "facebook_system_user_token": False,
+                    })
                 _logger.debug(f"  Updating existing account ID: {existing_account.id}")
                 existing_account.write(values_data)
                 _logger.debug("  ✓ Updated account")
@@ -3000,3 +3016,13 @@ class SocialAccount(models.Model):
         for account in facebook_accounts:
             account.update_facebook_impressions_engagements()
             account.last_insight_update = fields.Datetime.now()
+            
+    def delete_account(self):
+        super().delete_account()
+        if self.media_type == "facebook":
+            icp = self.env['ir.config_parameter'].sudo()
+            icp.set_param('social_media_base.facebook_app_id', False)
+            icp.set_param('social_media_base.facebook_app_secret', False)
+            icp.set_param('social_media_base.facebook_system_user_token', False)
+            icp.set_param('social_media_base.facebook_connection_method', False)
+            

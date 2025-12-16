@@ -21,6 +21,5 @@
         <field name="priority">1</field>
         <field name="active" eval="True"/>
     </record>
-
 </odoo>
 

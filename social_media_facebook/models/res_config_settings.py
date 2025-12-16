@@ -1,7 +1,9 @@
 # Copyright 2025 Kencove (https://www.kencove.com/)
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
-from odoo import fields, models
+from odoo import fields, models, api
+import logging
+_logger = logging.getLogger(__name__)
 
 
 class ResConfigSettings(models.TransientModel):
@@ -39,6 +41,36 @@ class ResConfigSettings(models.TransientModel):
             "view_mode": "form",
             "target": "new",
         }
+        
+    # === Connection method ===
+    facebook_connection_method = fields.Selection([
+            ('app', 'Facebook App (OAuth)'),
+            ('system_user', 'System User Token'),
+        ],
+        string='Facebook Connection Method',
+        config_parameter='social_media_base.facebook_connection_method',
+        default=''
+    )
+    
+    use_app_login = fields.Boolean(
+        readonly=True
+    )
+
+    use_system_user = fields.Boolean(
+        readonly=True
+    )
+    
+    def get_values(self):
+        res = super().get_values()
+        param = self.env["ir.config_parameter"].sudo().get_param(
+            "social_media_base.facebook_connection_method",
+            default=""
+        )
+        res.update({
+            "use_app_login": param == "app",
+            "use_system_user": param == "system_user",
+        })
+        return res
 
     # === Facebook Lead Ads Webhook ===
     facebook_webhook_verify_token = fields.Char(

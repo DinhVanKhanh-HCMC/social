@@ -51,6 +51,7 @@
           <field name="media_type" invisible="1"/>
           <field name="facebook_app_id" readonly="1"/>
           <field name="facebook_app_secret" password="True" readonly="1"/>
+          <field name="facebook_system_user_token" password="True" readonly="1"/>
           <field name="fb_ad_account_id" placeholder="act_123456789"/>
         </group>
 

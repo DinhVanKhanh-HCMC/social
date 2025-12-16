@@ -262,5 +262,4 @@ class SocialPost(models.Model):
         return (
             render_template if render_template else self.env._("No preview available")
         )
-
     # No override needed - content_type is now handled by base model

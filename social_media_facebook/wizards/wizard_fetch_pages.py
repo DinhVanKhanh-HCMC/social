@@ -58,6 +58,10 @@ class WizardFetchPages(models.TransientModel):
                         "social_media_base.facebook_app_secret",
                         wizard_social_account.facebook_app_secret
                     )
+                self.env["ir.config_parameter"].sudo().set_param(
+                    "social_media_base.facebook_connection_method",
+                    "app"
+                )
                 _logger.debug("App credentials saved to settings")
 
             # Create accounts using the data we already have
