@@ -64,14 +64,15 @@
                                 <div>
                                     <field name="send_post" widget="radio" nolabel="1"/>
                                 </div>
-                                <field
-                                    name="send_post_date"
-                                    nolabel="1"
-                                    readonly="0"
-                                    invisible="send_post == 'now'"
-                                    required="send_post == 'schedule'"
-                                    class="mt-2"
-                                />
+                                <group class="row">
+                                    <field
+                                        name="send_post_date"
+                                        readonly="0"
+                                        invisible="send_post == 'now'"
+                                        required="send_post == 'schedule'"
+                                        class="mt-2"
+                                    />
+                                </group>
                             </div>
                         </group>
 

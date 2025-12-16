@@ -41,7 +41,9 @@ class SocialPost(models.Model):
         tracking=True,
     )
     send_post_date = fields.Datetime(
-        string="Schedule date", compute="_compute_send_post_date", store=True
+        string="Schedule date", 
+        #compute="_compute_send_post_date", 
+        store=True
     )
     published_date = fields.Datetime(tracking=True)
     state = fields.Selection(
@@ -133,12 +135,12 @@ class SocialPost(models.Model):
                 ", ".join(acc.account_ids.mapped("media_id.name"))
             )
 
-    @api.depends("send_post")
-    def _compute_send_post_date(self):
-        for post in self:
-            if post.send_post == "schedule":
-                post.send_post_date = datetime.now() + timedelta(hours=1)
-                post.state = "planned"
+    # @api.depends("send_post")
+    # def _compute_send_post_date(self):
+    #     for post in self:
+    #         if post.send_post == "schedule":
+    #             post.send_post_date = datetime.now() + timedelta(hours=1)
+    #             post.state = "planned"
 
     @api.depends(
         "post_account_ids.like_count",
@@ -271,7 +273,7 @@ class SocialPost(models.Model):
             [
                 ("state", "=", "planned"),
                 ("send_post", "=", "schedule"),
-                ("send_post_date", "<=", datetime.now()),
+                ("send_post_date", "<=", fields.Datetime.now()),
             ]
         )
         post_accounts._action_create_post_account()
