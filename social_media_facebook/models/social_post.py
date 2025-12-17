@@ -10,6 +10,7 @@ _logger = logging.getLogger(__name__)
 
 class SocialPost(models.Model):
     _inherit = "social.post"
+    _order = 'state asc, published_date desc'
 
     # Computed field for kanban/search views (checks if ANY post_account is synced from FB)
     is_synced_from_facebook = fields.Boolean(

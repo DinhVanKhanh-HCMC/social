@@ -2687,6 +2687,7 @@ class SocialAccount(models.Model):
                         "message": metrics_data.get("message"),
                         "content_type": metrics_data.get("content_type"),
                         "state": metrics_data.get("state"),
+                        "published_date": metrics_data.get("created_time"),
                     })
                     updated_count += 1
                     _logger.debug(f"Updated social.post ID: {existing_post.id} (FB: {fb_content_id})")
@@ -2700,6 +2701,7 @@ class SocialAccount(models.Model):
                         "content_type": metrics_data.get("content_type"),
                         "account_ids": metrics_data.get("account_ids"),
                         "state": metrics_data.get("state"),
+                        "published_date": metrics_data.get("created_time"),
                     })
                     if "image_ids" in metrics_data:
                         post.write({"image_ids": metrics_data["image_ids"]})
@@ -2812,6 +2814,7 @@ class SocialAccount(models.Model):
                     existing_post.write({
                         "message": metrics_data.get("message"),
                         "state": metrics_data.get("state"),
+                        "published_date": metrics_data.get("created_time"),
                     })
                     updated_count += 1
                     _logger.debug(f"Updated social.post ID: {existing_post.id} (FB: {fb_content_id})")
@@ -2825,6 +2828,7 @@ class SocialAccount(models.Model):
                         "account_ids": metrics_data.get("account_ids"),
                         "content_type": "reel",  # Videos are reels
                         "state": metrics_data.get("state"),
+                        "published_date": metrics_data.get("created_time"),
                     })
                     created_count += 1
                     _logger.debug(f"Created social.post ID: {post.id} (FB: {fb_content_id})")

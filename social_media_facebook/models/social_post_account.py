@@ -11,6 +11,7 @@ _logger = logging.getLogger(__name__)
 
 class SocialPostAccount(models.Model):
     _inherit = "social.post.account"
+    _order = 'created_time desc'
 
     # ===== FACEBOOK-SPECIFIC FIELDS =====
     # These fields are specific to Facebook posts published on this account
