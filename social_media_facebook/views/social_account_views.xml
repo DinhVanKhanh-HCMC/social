@@ -98,7 +98,7 @@
                         password="True"
                         readonly="1"
                     />
-                    <field name="fb_ad_account_id" placeholder="act_123456789" />
+                    <field name="fb_ad_account_id" readonly="1" />
                 </group>
 
                 <!-- Page Information -->

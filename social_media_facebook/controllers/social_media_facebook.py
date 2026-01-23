@@ -92,6 +92,34 @@ class SocialMediaFacebookController(http.Controller):
                     )
                     _logger.debug(f"Wizard created with ID: {wizard.id}")
 
+                    # Fetch ad accounts and create wizard lines for them
+                    _logger.debug("Fetching available Facebook ad accounts...")
+                    ad_accounts = account_model.get_ad_accounts_facebook(
+                        user_access_token
+                    )
+                    _logger.debug(f"Found {len(ad_accounts)} ad accounts")
+
+                    for ad_account in ad_accounts:
+                        ad_account_line = (
+                            request.env["wizard.fetch.pages.ad.account"]
+                            .sudo()
+                            .create(
+                                {
+                                    "wizard_id": wizard.id,
+                                    "ad_account_id": ad_account.get("id", ""),
+                                    "ad_account_name": ad_account.get("name", ""),
+                                    "account_status": ad_account.get(
+                                        "account_status", 0
+                                    ),
+                                    "currency": ad_account.get("currency", ""),
+                                }
+                            )
+                        )
+                        _logger.debug(
+                            f"Created ad account line ID: {ad_account_line.id} "
+                            f"for {ad_account.get('name')}"
+                        )
+
                     # Create wizard lines for each page
                     for page in pages:
                         _logger.error(

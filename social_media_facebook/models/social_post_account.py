@@ -4,9 +4,9 @@
 import json
 import logging
 import re
+from datetime import datetime
 
 from odoo import api, fields, models
-from datetime import datetime
 
 _logger = logging.getLogger(__name__)
 
@@ -256,7 +256,7 @@ class SocialPostAccount(models.Model):
                 _logger.debug(
                     "State set successfully. Now calling account._action_post()"
                 )
-                
+
                 URL_REGEX = r"(https?://[^\s]+)"
 
                 match = re.search(URL_REGEX, self.message or "")

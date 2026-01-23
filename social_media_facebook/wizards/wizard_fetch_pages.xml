@@ -8,11 +8,16 @@
             <form string="Fetch Facebook Pages">
                 <group>
                     <field name="user_access_token" invisible="1" />
+                    <field name="ad_account_ids" invisible="1" />
                     <field name="page_ids" nolabel="1">
                         <list editable="bottom">
                             <field name="selected" />
                             <field name="page_name" readonly="1" />
                             <field name="page_id" readonly="1" />
+                            <field
+                                name="ad_account_id"
+                                options="{'no_create': True, 'no_open': True}"
+                            />
                             <field name="already_connected" readonly="1" />
                             <!-- page_access_token is stored but not displayed for security -->
                             <field name="page_access_token" column_invisible="True" />

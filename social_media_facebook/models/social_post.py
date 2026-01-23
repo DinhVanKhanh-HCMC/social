@@ -4,6 +4,7 @@
 import logging
 
 from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -123,6 +124,18 @@ class SocialPost(models.Model):
         Override to handle posting to multiple Facebook accounts.
         """
         self._action_create_post_account()
+
+    @api.constrains("image_ids", "video_ids")
+    def _check_media_exclusivity(self):
+        """Ensure that a post cannot have both images and videos"""
+        for post in self:
+            if post.image_ids and post.video_ids:
+                raise ValidationError(
+                    self.env._(
+                        "You cannot attach both images and videos to the same post. "
+                        "Please choose either images or a video."
+                    )
+                )
 
     def _action_create_post_account(self):
         """

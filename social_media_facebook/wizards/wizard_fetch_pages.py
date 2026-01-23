@@ -19,6 +19,12 @@ class WizardFetchPages(models.TransientModel):
         help="Select the Facebook pages you want to connect",
     )
     user_access_token = fields.Char(readonly=True)
+    ad_account_ids = fields.One2many(
+        "wizard.fetch.pages.ad.account",
+        "wizard_id",
+        string="Available Ad Accounts",
+        help="Ad accounts available for selection",
+    )
 
     def action_create_accounts(self):
         """Create social.account records for selected pages"""
@@ -41,11 +47,16 @@ class WizardFetchPages(models.TransientModel):
                         "id": line.page_id,
                         "name": line.page_name,
                         "access_token": line.page_access_token,
+                        "ad_account_id": line.ad_account_id.ad_account_id
+                        if line.ad_account_id
+                        else False,
                     }
                 )
                 _logger.debug(
-                    f"  - Will create account for: {line.page_name} "
-                    f"(ID: {line.page_id})"
+                    "  - Will create account for: %s (ID: %s, Ad Account: %s)",
+                    line.page_name,
+                    line.page_id,
+                    line.ad_account_id.ad_account_id if line.ad_account_id else "None",
                 )
 
             # Get app credentials from wizard.social.account if available
@@ -111,3 +122,31 @@ class WizardFetchPagesLine(models.TransientModel):
     page_access_token = fields.Char(required=True)
     selected = fields.Boolean(string="Select", default=True)
     already_connected = fields.Boolean(readonly=True)
+    ad_account_id = fields.Many2one(
+        "wizard.fetch.pages.ad.account",
+        string="Ad Account",
+        domain="[('wizard_id', '=', wizard_id)]",
+        help="Select an advertising account to link with this page",
+    )
+
+
+class WizardFetchPagesAdAccount(models.TransientModel):
+    _name = "wizard.fetch.pages.ad.account"
+    _description = "Facebook Ad Account Selection"
+    _rec_name = "ad_account_name"
+
+    wizard_id = fields.Many2one(
+        "wizard.fetch.pages", string="Wizard", required=True, ondelete="cascade"
+    )
+    ad_account_id = fields.Char(string="Ad Account ID", required=True)
+    ad_account_name = fields.Char(string="Name", required=True)
+    account_status = fields.Integer(string="Status")
+    currency = fields.Char()
+
+    def name_get(self):
+        """Display ad account name with ID"""
+        result = []
+        for record in self:
+            name = f"{record.ad_account_name} ({record.ad_account_id})"
+            result.append((record.id, name))
+        return result

@@ -2,10 +2,10 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
 import base64
+import io
 import json
 import logging
 from datetime import date, datetime, timedelta
-import io
 
 import requests
 from dateutil import parser as dateutil_parser
@@ -592,6 +592,55 @@ class SocialAccount(models.Model):
             _logger.warning(f"No pages data in response or error occurred: {response}")
         return []
 
+    def get_ad_accounts_facebook(self, user_access_token):
+        """Fetch ad accounts accessible by the user from Facebook API
+
+        Args:
+            user_access_token: Facebook user access token
+
+        Returns:
+            list: List of dicts with ad account info [{"id": "act_xxx", "name": "..."}]
+        """
+        _logger.debug("Fetching Facebook ad accounts from API...")
+        params = {
+            "access_token": user_access_token,
+            "fields": "account_id,name,account_status,currency,business_name",
+        }
+        _logger.debug("Calling Facebook API: me/adaccounts")
+        response = self._request_facebook(endpoint="me/adaccounts", params=params)
+        _logger.debug(f"Facebook ad accounts API response type: {type(response)}")
+
+        if isinstance(response, dict) and response.get("data"):
+            ad_accounts = response.get("data", [])
+            _logger.debug(f"Successfully retrieved {len(ad_accounts)} ad accounts")
+            # Format the ad accounts with act_ prefix for id
+            formatted_accounts = []
+            for account in ad_accounts:
+                account_id = account.get("account_id") or account.get("id", "")
+                # Ensure act_ prefix
+                if account_id and not account_id.startswith("act_"):
+                    account_id = f"act_{account_id}"
+                formatted_accounts.append(
+                    {
+                        "id": account_id,
+                        "name": account.get("name")
+                        or account.get("business_name")
+                        or account_id,
+                        "account_status": account.get("account_status"),
+                        "currency": account.get("currency"),
+                    }
+                )
+                _logger.debug(
+                    f"  - Ad Account: {formatted_accounts[-1]['name']} "
+                    f"(ID: {account_id})"
+                )
+            return formatted_accounts
+        else:
+            _logger.warning(
+                f"No ad accounts data in response or error occurred: {response}"
+            )
+        return []
+
     def create_account_facebook(self, selected_page_ids, token):
         """Create Facebook accounts for selected pages only"""
         _logger.debug("=" * 80)
@@ -739,6 +788,12 @@ class SocialAccount(models.Model):
                     "social_media_facebook.social_media_facebook"
                 ).id,
             }
+
+            # Add ad account ID if provided
+            ad_account_id = page.get("ad_account_id")
+            if ad_account_id:
+                values_data["fb_ad_account_id"] = ad_account_id
+                _logger.debug(f"  Ad Account ID: {ad_account_id}")
 
             # Download and store Facebook page profile picture
             _logger.debug("  Downloading page profile picture...")
@@ -986,7 +1041,6 @@ class SocialAccount(models.Model):
         return False
 
     def _post_single_image(self, message, image, base_params):
-
         _logger.debug("Posting single image to Facebook")
 
         if not image.datas:
@@ -1033,8 +1087,6 @@ class SocialAccount(models.Model):
         return self._post_text_only_fallback(message, base_params)
 
     def _post_multiple_images(self, message, image_ids, base_params):
-        import io
-
         _logger.debug(f"Posting {len(image_ids)} images to Facebook")
 
         photo_ids = []
@@ -1100,8 +1152,6 @@ class SocialAccount(models.Model):
         return self._post_text_only_fallback(message, base_params)
 
     def _post_video(self, message, video, base_params):
-        import io
-
         _logger.debug("Posting video to Facebook")
 
         if not video.datas:
