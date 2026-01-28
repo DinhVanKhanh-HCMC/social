@@ -1,18 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
 <odoo>
     <record id="view_wizard_facebook_system_user_form" model="ir.ui.view">
         <field name="name">wizard.facebook.system.user.form</field>
         <field name="model">wizard.facebook.system.user</field>
         <field name="arch" type="xml">
-            <form string="System User Token">
-                <group>
-                    <field name="system_user_token" password="True" />
+            <form string="Facebook System User Connection">
+                <field name="state" invisible="1" />
+                <!-- Step 1: Token Entry -->
+                <group invisible="state != 'token'">
+                    <group>
+                        <field
+                            name="system_user_token"
+                            password="True"
+                            required="state == 'token'"
+                            placeholder="Enter System User Access Token"
+                        />
+                    </group>
+                </group>
+                <!-- Step 2: Page Selection -->
+                <group invisible="state != 'pages'">
+                    <field name="ad_account_ids" invisible="1" />
+                    <field name="page_ids" nolabel="1">
+                        <list editable="bottom">
+                            <field name="selected" />
+                            <field name="page_name" readonly="1" />
+                            <field name="page_id" readonly="1" />
+                            <field
+                                name="ad_account_id"
+                                options="{'no_create': True, 'no_open': True}"
+                            />
+                            <field name="already_connected" readonly="1" />
+                            <!-- page_access_token is stored but not displayed for security -->
+                            <field name="page_access_token" column_invisible="True" />
+                        </list>
+                    </field>
                 </group>
                 <footer>
+                    <!-- Token state buttons -->
                     <button
-                        string="Associate"
+                        string="Fetch Pages"
+                        type="object"
+                        name="action_fetch_pages"
+                        class="btn-primary"
+                        invisible="state != 'token'"
+                    />
+                    <!-- Pages state buttons -->
+                    <button
+                        string="Connect Selected Pages"
                         type="object"
                         name="action_connect_system_user"
                         class="btn-primary"
+                        invisible="state != 'pages'"
                     />
                     <button string="Cancel" special="cancel" class="btn-secondary" />
                 </footer>
